@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="197.634mm"
+   height="141.6924mm"
+   viewBox="0 0 197.634 141.6924"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.1 r15371"
+   sodipodi:docname="test.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.34590573"
+     inkscape:cx="135.80049"
+     inkscape:cy="246.09498"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1600"
+     inkscape:window-height="837"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(29.738786,-72.253567)">
+    <ellipse
+       style="fill:none;fill-opacity:0.27441861;stroke:#000000;stroke-width:1.17024899;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="surfaceName_sp2_disc"
+       cx="85.707504"
+       cy="117.40186"
+       rx="15.563315"
+       ry="16.998949"
+       inkscape:label="dickinsonia" />
+    <ellipse
+       style="fill:none;fill-opacity:0.27441861;stroke:#000000;stroke-width:0.93992096;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="surfaceName_sp5_disc"
+       cx="15.887324"
+       cy="92.615913"
+       rx="15.055983"
+       ry="16.159727"
+       inkscape:label="dickinsonia" />
+    <ellipse
+       style="fill:none;fill-opacity:0.27441861;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="surfaceName_sp4_disc"
+       cx="99.051971"
+       cy="153.30556"
+       rx="16.07913"
+       ry="18.950401"
+       transform="rotate(30.67)"
+       inkscape:label="dickinsonia">
+      <title
+         id="title4490">1u-1r-1c-1ur-2f-3c</title>
+    </ellipse>
+    <ellipse
+       style="fill:none;fill-opacity:0.27441861;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="surfaceName_sp3_disc"
+       cx="93.459946"
+       cy="195.21338"
+       rx="16.222692"
+       ry="18.232584"
+       inkscape:label="dickinsonia" />
+    <ellipse
+       style="fill:none;fill-opacity:0.27441861;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="surfaceName_sp1_disc"
+       cx="150.16757"
+       cy="91.991096"
+       rx="17.227638"
+       ry="19.23753"
+       inkscape:label="dickisonia" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 93.98225,103.11253 9.13849,-14.996484"
+       id="surfaceName_sp2_stemL"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path4487" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 112.96218,75.697078 c -0.70296,3.983443 -9.84144,12.418968 -9.84144,12.418968"
+       id="surfaceName_sp2_frondL"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path4489" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 101.01185,77.57164 14.05921,9.138485"
+       id="surfaceName_sp2_frondW"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path4491" />
+  </g>
+</svg>
