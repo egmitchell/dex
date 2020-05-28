@@ -33,16 +33,16 @@ main = do
         let ans = map unroll $ groupSort [(infoSurface i, (enrich i,s)) | (i,s) <- res, isJust $ infoPart i]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ ignored ++ map show bad
-        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,Angle,StemL,StemW,FrondL,FrondW,Length1,Length2,Width1,Width2" : good
+        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,Angle,StemL,StemW,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy" : good
 
 unroll :: (String, [(Info, Shape)]) -> String
 unroll (surface, parts) = intercalate "," $
         surface :infoLabel i : infoDesc i :
-        map show [discX,discY,discRx,discRy,angle,f StemL,f StemW,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2] ++
+        map show [discX,discY,discRx,discRy,angle,f StemL,f StemW,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2,fst g,snd g] ++
         splitOn "-" (infoTitle i)
     where
         err = errorWithoutStackTrace
-        (i,discX,discY,discRx,discRy) = case filter (isEllipse . snd) parts of
+        (i,discX,discY,discRx,discRy) = case filter ((/= Just Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
             [(i@Info{infoPart=Just Pt},SEllipse (x,y) _ _)] -> (i,x,y,0,0)
             [(i@Info{infoPart=Just Disc},SEllipse (x,y) rx ry)] -> (i,x,y,rx*2,ry*2)
             bad -> err $ "Wrong number of discs for " ++ surface ++ ", got " ++ show bad
@@ -51,6 +51,8 @@ unroll (surface, parts) = intercalate "," $
             [] -> 0
             [x] -> x
             xs -> err $ "Wrong number of " ++ show x ++ " for " ++ surface ++ ", got " ++ show (length xs)
+
+        g = head $ [(rx*2, ry*2) | (i, SEllipse _ rx ry) <- parts, infoPart i == Just Disc2] ++ [(0,0)]
 
         -- find either StemL if it exists, or FrondL if not
         stemPaths = [ps | (i, SPath ps) <- parts, infoPart i == Just StemL] ++ [ps | (i, SPath ps) <- parts, infoPart i == Just FrondL]
@@ -66,7 +68,7 @@ type X = Double
 type Y = Double
 type XY = (X, Y)
 
-data Part = Disc | Pt | StemW | StemL | FrondW | FrondL | Length1 | Length2 | Width1 | Width2
+data Part = Disc | Pt | Disc2 | StemW | StemL | FrondW | FrondL | Length1 | Length2 | Width1 | Width2
     deriving (Enum,Bounded,Show,Eq)
 
 toPart :: String -> Maybe Part
