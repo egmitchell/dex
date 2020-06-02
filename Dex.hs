@@ -107,6 +107,10 @@ pathLength xs = sum $ zipWith distanceXY (init xs) (tail xs)
 transformation :: Transformation -> XY -> XY
 transformation (TransformMatrix a b c d e f) (x, y) = (a*x + c*y + e, b*x + d*y + f)
 transformation (Translate e f) (x, y) = (x + e, y + f)
+transformation (Rotate a (fromMaybe (0,0) -> (ox,oy))) (x, y) =
+    (cos angle * (x - ox) - sin angle * (y - oy) + ox
+    ,sin angle * (x - ox) + cos angle * (y - oy) + oy)
+    where angle = a * (pi / 180) -- Convert to radians
 transformation t _ = error $ "Unhandled transformation, " ++ show t
 
 applyXY :: (XY -> XY) -> Shape -> Shape
