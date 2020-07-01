@@ -33,12 +33,12 @@ main = do
         let ans = map unroll $ groupSort [(infoSurface i, (enrich i,s)) | (i,s) <- res, isJust $ infoPart i]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ ignored ++ map show bad
-        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,Angle,StemL,StemW,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy" : good
+        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy" : good
 
 unroll :: (String, [(Info, Shape)]) -> String
 unroll (surface, parts) = intercalate "," $
         surface :infoLabel i : infoDesc i :
-        map show [discX,discY,discRx,discRy,angle,f StemL,f StemW,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2,fst g,snd g] ++
+        map show [discX,discY,discRx,discRy,angle StemL,f StemL,f StemW,angle FrondL,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2,fst g,snd g] ++
         splitOn "-" (infoTitle i)
     where
         err = errorWithoutStackTrace
@@ -55,11 +55,12 @@ unroll (surface, parts) = intercalate "," $
         g = head $ [(rx*2, ry*2) | (i, SEllipse _ rx ry) <- parts, infoPart i == Just Disc2] ++ [(0,0)]
 
         -- find either StemL if it exists, or FrondL if not
-        stemPaths = [ps | (i, SPath ps) <- parts, infoPart i == Just StemL] ++ [ps | (i, SPath ps) <- parts, infoPart i == Just FrondL]
-        stemPathNorm = if distanceXY (last stemPath) (discX,discY) < distanceXY (head stemPath) (discX,discY) then reverse stemPath else stemPath
-            where stemPath = head stemPaths
+        angle typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
+            where
+                paths = [ps | (i, SPath ps) <- parts, infoPart i == Just typ]
+                pathNorm = if distanceXY (last stemPath) (discX,discY) < distanceXY (head stemPath) (discX,discY) then reverse stemPath else stemPath
+                    where stemPath = head paths
 
-        angle = if null stemPaths then 0 else angleXY (stemPathNorm !! 0) (stemPathNorm !! 1)
 
 
     -- writeFile "test.tsv" . unlines . reorder . map (intercalate "\t") . columns [] . map (render . parse) . process . dropDefs . parseTags =<< readFile "test.svg"
