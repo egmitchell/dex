@@ -33,26 +33,29 @@ main = do
         let ans = map unroll $ groupSort [(infoSurface i, (enrich i,s)) | (i,s) <- res, isJust $ infoPart i]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ ignored ++ map show bad
-        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy" : good
+        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy" : good
 
 unroll :: (String, [(Info, Shape)]) -> String
 unroll (surface, parts) = intercalate "," $
         surface :infoLabel i : infoDesc i :
-        map show [discX,discY,discRx,discRy,angle StemL,f StemL,f StemW,angle FrondL,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2,fst g,snd g] ++
+        map show [discX,discY,discRx,discRy,discA,angle StemL,f StemL,f StemW,angle FrondL,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2,fst g,snd g] ++
         splitOn "-" (infoTitle i)
     where
         err = errorWithoutStackTrace
-        (i,discX,discY,discRx,discRy) = case filter ((/= Just Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
-            [(i@Info{infoPart=Just Pt},SEllipse (x,y) _ _)] -> (i,x,y,0,0)
-            [(i@Info{infoPart=Just Disc},SEllipse (x,y) rx ry)] -> (i,x,y,rx*2,ry*2)
+        (i,discX,discY,discRx,discRy,discA) = case filter ((/= Just Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
+            [(i@Info{infoPart=Just Pt},SEllipse (x,y) _ _ _)] -> (i,x,y,0,0,0)
+            [(i@Info{infoPart=Just Disc},SEllipse (x,y) rx ry (xa,ya))] -> (i,x,y,rx*2,ry*2,reangle $ atan ((xa-x) / (ya-y)))
             bad -> err $ "Wrong number of discs for " ++ surface ++ ", got " ++ show bad
+
+        reangle radians = if v < 0 then v + 180 else v
+            where v = radians / pi * 180
 
         f x = case [pathLength ps | (i,SPath ps) <- parts, infoPart i == Just x] of
             [] -> 0
             [x] -> x
             xs -> err $ "Wrong number of " ++ show x ++ " for " ++ surface ++ ", got " ++ show (length xs)
 
-        g = head $ [(rx*2, ry*2) | (i, SEllipse _ rx ry) <- parts, infoPart i == Just Disc2] ++ [(0,0)]
+        g = head $ [(rx*2, ry*2) | (i, SEllipse _ rx ry _) <- parts, infoPart i == Just Disc2] ++ [(0,0)]
 
         -- find either StemL if it exists, or FrondL if not
         angle typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
@@ -88,7 +91,7 @@ data Info = Info
 
 data Shape
     = SPath [XY]
-    | SEllipse XY X Y
+    | SEllipse XY X Y XY
     | SUnknown String
       deriving Show
 
@@ -116,7 +119,7 @@ transformation t _ = error $ "Unhandled transformation, " ++ show t
 
 applyXY :: (XY -> XY) -> Shape -> Shape
 applyXY f (SPath xs) = SPath $ map f xs
-applyXY f (SEllipse xy x y) = SEllipse (f xy) x y -- leave the radius untouched
+applyXY f (SEllipse xy x y a) = SEllipse (f xy) x y (f a) -- leave the radius untouched
 applyXY f (SUnknown x) = SUnknown x
 
 transformations :: Shape -> [Transformation] -> Shape
@@ -137,7 +140,9 @@ asLine Path{_pathDefinition = xs} = SPath $ f (0,0) xs
         f _ [] = []
 
 asRound :: Ellipse -> Shape
-asRound Ellipse{_ellipseXRadius=Num rx, _ellipseYRadius=Num ry, _ellipseCenter=(Num x, Num y)} = SEllipse (x,y) rx ry
+asRound Ellipse{_ellipseXRadius=Num rx, _ellipseYRadius=Num ry, _ellipseCenter=(Num x, Num y)} =
+    SEllipse (x,y) rx ry $
+        if rx > ry then (x+rx, y) else (x, y+ry)
 
 info :: DrawAttributes -> Info
 info x = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) "" "" ""
