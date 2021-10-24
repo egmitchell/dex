@@ -44,7 +44,7 @@ unroll (surface, parts) = intercalate "," $
         err = errorWithoutStackTrace
         (i,discX,discY,discRx,discRy,discA) = case filter ((/= Just Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
             [(i@Info{infoPart=Just Pt},SEllipse (x,y) _ _ _)] -> (i,x,y,0,0,0)
-            [(i@Info{infoPart=Just Disc},SEllipse (x,y) rx ry (xa,ya))] -> (i,x,y,rx*2,ry*2,reangle $ atan ((xa-x) / (ya-y)))
+            [(i@Info{infoPart=Just Disc},SEllipse (x,y) rx ry (xa,ya))] -> (i,x,y,max rx ry * 2,min rx ry * 2,reangle $ atan ((xa-x) / (ya-y)))
             bad -> err $ "Wrong number of discs for " ++ surface ++ ", got " ++ show bad
 
         reangle radians = if v < 0 then v + 180 else v
