@@ -37,7 +37,7 @@ main = do
 
 unroll :: (String, [(Info, Shape)]) -> String
 unroll (surface, parts) = intercalate "," $
-        surface :infoLabel i : infoDesc i :
+        show surface : show (infoLabel i) : show (infoDesc i) :
         map show [discX,discY,discRx,discRy,discA,angle StemL,f StemL,f StemW,angle FrondL,f FrondL,f FrondW,f Length1,f Length2,f Width1,f Width2,fst g,snd g] ++
         splitOn "-" (infoTitle i)
     where
