@@ -134,7 +134,9 @@ asLine Path{_pathDefinition = xs} = SPath $ f (0,0) xs
             CurveTo r ((_,_,V2 x y):xys) -> go r x y $ CurveTo r xys : ps
             LineTo r [] -> f (x,y) ps
             CurveTo r [] -> f (x,y) ps
+            VerticalTo OriginRelative [y] -> f (x,y) $ LineTo OriginRelative [V2 0 y] : ps
             EndPath -> f (x,y) ps
+            _ -> error $ "Unknown line segment: " ++ show p
             where go OriginAbsolute x y rest = (x,y) : f (x,y) rest
                   go OriginRelative ((+x) -> x) ((+y) -> y) rest = (x,y) : f (x,y) rest
         f _ [] = []
