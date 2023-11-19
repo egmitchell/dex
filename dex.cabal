@@ -1,0 +1,11 @@
+cabal-version:      3.0
+name:               dex
+version:            0.1.0.0
+license:            BSD-2-Clause
+author:             Emily Mitchell
+build-type:         Simple
+
+executable dex
+    main-is:          Dex.hs
+    build-depends:    base, svg-tree, filepath, containers, extra, linear, deepseq, tagsoup
+    default-language: Haskell2010
