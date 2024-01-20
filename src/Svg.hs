@@ -7,9 +7,6 @@ module Svg (
     pathLength,
     angleXY,
     distanceXY,
-    asRound,
-    asLine,
-    transformations,
 ) where
 
 import Data.Maybe
