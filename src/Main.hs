@@ -23,7 +23,7 @@ main = do
 
         Just doc <- loadSvgFile file
         let Just (_, _, _, height) = _viewBox doc
-        let res = map (first enrich) $ concatMap (root [TransformMatrix 1 0 0 (-1) 0 height]) $ _elements doc
+        let res = map (first $ enrich . info) $ concatMap (root [TransformMatrix 1 0 0 (-1) 0 height]) $ _elements doc
         let extraParts = nubOrd [x | Right x <- map (infoPart . fst) res, x `notElem` ["frondleft", "frondright"]]
         let ans = map (unroll extraParts) $ groupSort [(infoSurface i, (i, s)) | (i, s) <- res]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
@@ -94,7 +94,7 @@ info x = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $
     ident = fromMaybe "" $ _attrId x
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
 
-root :: [Transformation] -> Tree -> [(Info, Shape)]
+root :: [Transformation] -> Tree -> [(DrawAttributes, Shape)]
 root ts x = case x of
     None -> []
     GroupTree x -> concatMap (root $ fromMaybe [] (_transform $ _groupDrawAttributes x) ++ ts) $ _groupChildren x
@@ -103,4 +103,4 @@ root ts x = case x of
     PathTree x -> f (_pathDrawAttributes x) $ asLine x
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
-    f at shp = [(info at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
+    f at shp = [(at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
