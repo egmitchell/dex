@@ -25,7 +25,9 @@ data Shape
     | SUnknown String
     deriving (Show)
 
-isEllipse SEllipse{} = True; isEllipse _ = False
+isEllipse :: Shape -> Bool
+isEllipse SEllipse{} = True
+isEllipse _ = False
 
 distanceXY :: XY -> XY -> Double
 distanceXY (x1, y1) (x2, y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
