@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Main (main) where
 
 import Control.DeepSeq
@@ -14,6 +12,7 @@ import System.Environment
 import System.FilePath
 import Text.HTML.TagSoup
 
+import Labels
 import Svg
 
 main :: IO ()
@@ -116,20 +115,3 @@ root ts x = case x of
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
     f at shp = [(info at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
-
-labels :: [Tag String] -> [(String, String)]
-labels xs = [(id, dropPrefix "#" lbl) | TagOpen _ at <- xs, Just id <- [lookup "id" at], Just lbl <- [lookup "inkscape:label" at]]
-
---
-titleDesc :: [Tag String] -> [(String, (String, String))]
-titleDesc (TagOpen _ at : rest)
-    | Just id <- lookup "id" at =
-        f ("", "") id rest
-  where
-    f (a, b) id (TagText _ : TagOpen s1 _ : TagText txt : TagClose s2 : rest)
-        | s1 == s2
-        , s1 `elem` ["desc", "title"] =
-            f ((if s1 == "desc" then (a,) else (,b)) $ trim txt) id rest
-    f ab id xs = (id, ab) : titleDesc xs
-titleDesc (x : xs) = titleDesc xs
-titleDesc [] = []
