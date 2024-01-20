@@ -1,8 +1,11 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
-module Labels (Label (..), defaultLabel, labels, titleDesc) where
+module Labels (Label (..), defaultLabel, labelsFromFile) where
 
 import Data.List.Extra
+import Data.Maybe
+import System.IO
 import Text.HTML.TagSoup
 
 data Label = Label
@@ -14,6 +17,16 @@ data Label = Label
 
 defaultLabel :: Label
 defaultLabel = Label "" "" ""
+
+labelsFromFile :: FilePath -> IO (String -> Label)
+labelsFromFile file = do
+    tags <- parseTags <$> readFile' file
+    let lbls = labels tags
+    let descs = titleDesc tags
+    return $ \x ->
+        let (lblTitle, lblDescription) = fromMaybe ("", "") $ lookup x descs
+            lblLabel = fromMaybe "" $ lookup x lbls
+         in Label{..}
 
 labels :: [Tag String] -> [(String, String)]
 labels xs = [(id, dropPrefix "#" lbl) | TagOpen _ at <- xs, Just id <- [lookup "id" at], Just lbl <- [lookup "inkscape:label" at]]

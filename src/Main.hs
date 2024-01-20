@@ -8,30 +8,18 @@ import Data.List.Extra
 import Data.Maybe
 import Data.Tuple.Extra
 import Graphics.Svg
-import System.Environment
-import System.FilePath
-import Text.HTML.TagSoup
-
 import Labels
 import Svg
+import System.Environment
+import System.FilePath
 
 main :: IO ()
 main = do
     files <- getArgs
     when (null files) $ fail "Run with a list of SVG files to process"
     forM_ files $ \file -> do
-        tags <- parseTags <$> readFile file
-        let lbls = labels tags
-        let descs = titleDesc tags
-        let enrich i =
-                i
-                    { infoLabel =
-                        Label
-                            { lblTitle = maybe "" fst $ lookup (infoId i) descs
-                            , lblDescription = maybe "" snd $ lookup (infoId i) descs
-                            , lblLabel = fromMaybe "" $ lookup (infoId i) lbls
-                            }
-                    }
+        labels <- labelsFromFile file
+        let enrich i = i{infoLabel = labels $ infoId i}
 
         Just doc <- loadSvgFile file
         let Just (_, _, _, height) = _viewBox doc
