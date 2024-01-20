@@ -1,9 +1,19 @@
 {-# LANGUAGE TupleSections #-}
 
-module Labels (labels, titleDesc) where
+module Labels (Label (..), defaultLabel, labels, titleDesc) where
 
 import Data.List.Extra
 import Text.HTML.TagSoup
+
+data Label = Label
+    { lblLabel :: String
+    , lblTitle :: String
+    , lblDescription :: String
+    }
+    deriving (Show)
+
+defaultLabel :: Label
+defaultLabel = Label "" "" ""
 
 labels :: [Tag String] -> [(String, String)]
 labels xs = [(id, dropPrefix "#" lbl) | TagOpen _ at <- xs, Just id <- [lookup "id" at], Just lbl <- [lookup "inkscape:label" at]]

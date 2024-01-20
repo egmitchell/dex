@@ -25,9 +25,12 @@ main = do
         let descs = titleDesc tags
         let enrich i =
                 i
-                    { infoTitle = maybe "" fst $ lookup (infoId i) descs
-                    , infoDesc = maybe "" snd $ lookup (infoId i) descs
-                    , infoLabel = fromMaybe "" $ lookup (infoId i) lbls
+                    { infoLabel =
+                        Label
+                            { lblTitle = maybe "" fst $ lookup (infoId i) descs
+                            , lblDescription = maybe "" snd $ lookup (infoId i) descs
+                            , lblLabel = fromMaybe "" $ lookup (infoId i) lbls
+                            }
                     }
 
         Just doc <- loadSvgFile file
@@ -46,11 +49,11 @@ unroll :: [String] -> (String, [(Info, Shape)]) -> String
 unroll extraParts (surface, parts) =
     intercalate "," $
         show surface
-            : show (infoLabel i)
-            : show (infoDesc i)
+            : show (lblLabel $ infoLabel i)
+            : show (lblDescription $ infoLabel i)
             : map show [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
             ++ concat [[show $ fAny $ Right x, show $ angleAny $ Right x] | x <- extraParts]
-            ++ splitOn "-" (infoTitle i)
+            ++ splitOn "-" (lblTitle $ infoLabel i)
   where
     err = errorWithoutStackTrace
     (i, discX, discY, discRx, discRy, discA) = case filter ((/= Left Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
@@ -93,14 +96,12 @@ data Info = Info
     { infoId :: String
     , infoSurface :: String
     , infoPart :: Either Part String
-    , infoLabel :: String
-    , infoTitle :: String
-    , infoDesc :: String
+    , infoLabel :: Label
     }
     deriving (Show)
 
 info :: DrawAttributes -> Info
-info x = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) "" "" ""
+info x = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) defaultLabel
   where
     ident = fromMaybe "" $ _attrId x
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
