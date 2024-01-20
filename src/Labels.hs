@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
-module Labels (Label (..), defaultLabel, labelsFromFile) where
+module Labels (Label (..), defaultLabel, readFileLabels) where
 
 import Data.List.Extra
 import Data.Maybe
@@ -18,8 +18,8 @@ data Label = Label
 defaultLabel :: Label
 defaultLabel = Label "" "" ""
 
-labelsFromFile :: FilePath -> IO (String -> Label)
-labelsFromFile file = do
+readFileLabels :: FilePath -> IO (String -> Label)
+readFileLabels file = do
     tags <- parseTags <$> readFile' file
     let lbls = labels tags
     let descs = titleDesc tags

@@ -18,7 +18,7 @@ main = do
     files <- getArgs
     when (null files) $ fail "Run with a list of SVG files to process"
     forM_ files $ \file -> do
-        labels <- labelsFromFile file
+        labels <- readFileLabels file
         let enrich i = i{infoLabel = labels $ infoId i}
 
         Just doc <- loadSvgFile file
