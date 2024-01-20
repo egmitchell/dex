@@ -1,6 +1,8 @@
 {-# LANGUAGE ViewPatterns, TupleSections #-}
 {-# OPTIONS_GHC -Wno-x-partial #-}
 
+module Main(main) where
+
 import Text.HTML.TagSoup
 import Control.Monad
 import Control.DeepSeq
