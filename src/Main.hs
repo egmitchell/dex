@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns, TupleSections #-}
+{-# OPTIONS_GHC -Wunused-binds -Wunused-imports #-}
 {-# OPTIONS_GHC -Wno-x-partial #-}
 
 module Main(main) where
@@ -13,7 +14,6 @@ import Data.List.Extra
 import Data.Tuple.Extra
 import System.Environment
 import System.FilePath
-import qualified Data.Map as Map
 import Graphics.Svg
 import Linear.V2
 
