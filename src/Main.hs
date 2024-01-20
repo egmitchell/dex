@@ -173,7 +173,7 @@ root ts x = case x of
 
 
 labels :: [Tag String] -> [(String, String)]
-labels xs = [(id, dropPrefix "#" $ lbl) | TagOpen _ at <- xs, Just id <- [lookup "id" at], Just lbl <- [lookup "inkscape:label" at]]
+labels xs = [(id, dropPrefix "#" lbl) | TagOpen _ at <- xs, Just id <- [lookup "id" at], Just lbl <- [lookup "inkscape:label" at]]
 
 --
 titleDesc :: [Tag String] -> [(String, (String, String))]
