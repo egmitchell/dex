@@ -13,3 +13,6 @@ executable dex
     ghc-options:      -Wunused-binds -Wunused-imports
     if impl(ghc >= 9.8)
         ghc-options:  -Wno-x-partial
+
+    other-modules:
+        Svg
