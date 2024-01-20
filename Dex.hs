@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns, TupleSections #-}
+{-# OPTIONS_GHC -Wno-x-partial #-}
 
 import Text.HTML.TagSoup
 import Control.Monad
