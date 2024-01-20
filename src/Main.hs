@@ -21,9 +21,8 @@ main = do
         labels <- readFileLabels file
         let enrich i = i{infoLabel = labels $ infoId i}
 
-        Just doc <- loadSvgFile file
-        let Just (_, _, _, height) = _viewBox doc
-        let res = map (first $ enrich . info) $ concatMap (root [TransformMatrix 1 0 0 (-1) 0 height]) $ _elements doc
+        shapes <- readFileShapes file
+        let res = map (first $ enrich . info) shapes
         let extraParts = nubOrd [x | Right x <- map (infoPart . fst) res, x `notElem` ["frondleft", "frondright"]]
         let ans = map (unroll extraParts) $ groupSort [(infoSurface i, (i, s)) | (i, s) <- res]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
@@ -93,14 +92,3 @@ info x = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $
   where
     ident = fromMaybe "" $ _attrId x
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
-
-root :: [Transformation] -> Tree -> [(DrawAttributes, Shape)]
-root ts x = case x of
-    None -> []
-    GroupTree x -> concatMap (root $ fromMaybe [] (_transform $ _groupDrawAttributes x) ++ ts) $ _groupChildren x
-    CircleTree (Circle a b c) -> root ts $ EllipseTree $ Ellipse a b c c
-    EllipseTree x -> f (_ellipseDrawAttributes x) $ asRound x
-    PathTree x -> f (_pathDrawAttributes x) $ asLine x
-    _ -> error $ "Unknown element: " ++ take 100 (show x)
-  where
-    f at shp = [(at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]

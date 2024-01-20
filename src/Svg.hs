@@ -3,6 +3,7 @@
 module Svg (
     Shape (..),
     isEllipse,
+    readFileShapes,
     pathLength,
     angleXY,
     distanceXY,
@@ -28,6 +29,23 @@ data Shape
 isEllipse :: Shape -> Bool
 isEllipse SEllipse{} = True
 isEllipse _ = False
+
+readFileShapes :: FilePath -> IO [(DrawAttributes, Shape)]
+readFileShapes file = do
+    Just doc <- loadSvgFile file
+    let Just (_, _, _, height) = _viewBox doc
+    return $ concatMap (root [TransformMatrix 1 0 0 (-1) 0 height]) $ _elements doc
+
+root :: [Transformation] -> Tree -> [(DrawAttributes, Shape)]
+root ts x = case x of
+    None -> []
+    GroupTree x -> concatMap (root $ fromMaybe [] (_transform $ _groupDrawAttributes x) ++ ts) $ _groupChildren x
+    CircleTree (Circle a b c) -> root ts $ EllipseTree $ Ellipse a b c c
+    EllipseTree x -> f (_ellipseDrawAttributes x) $ asRound x
+    PathTree x -> f (_pathDrawAttributes x) $ asLine x
+    _ -> error $ "Unknown element: " ++ take 100 (show x)
+  where
+    f at shp = [(at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
 
 distanceXY :: XY -> XY -> Double
 distanceXY (x1, y1) (x2, y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
