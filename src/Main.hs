@@ -5,9 +5,7 @@ import Control.Exception.Extra
 import Control.Monad
 import Data.Either.Extra
 import Data.List.Extra
-import Data.Maybe
 import Data.Tuple.Extra
-import Graphics.Svg
 import Labels
 import Svg
 import System.Environment
@@ -87,8 +85,7 @@ data Info = Info
     }
     deriving (Show)
 
-info :: DrawAttributes -> Info
-info x = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) defaultLabel
+info :: String -> Info
+info ident = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) defaultLabel
   where
-    ident = fromMaybe "" $ _attrId x
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
