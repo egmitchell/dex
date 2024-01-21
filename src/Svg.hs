@@ -7,6 +7,7 @@ module Svg (
     AEllipse,
     XY (..),
     readFileShapes,
+    pathFromPoint,
     pathLength,
     pathStartingFromPoint,
     pathAngles,
@@ -34,6 +35,9 @@ data Shape
 newtype APath = APath [XY] deriving (Show)
 
 data AEllipse = AEllipse XY X Y XY deriving (Show)
+
+pathFromPoint :: XY -> APath
+pathFromPoint xy = APath [xy]
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do

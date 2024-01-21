@@ -55,11 +55,11 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ concat [f (show o) (len o) ++ angles (show o ++ "A") (parent o) o | (o@Branch{}, _) <- fosParts]
         ++ concat [f x (len o) ++ angles (x ++ "A") root o | (o@(Other x), _) <- fosParts]
   where
-    root = SEllipse $ snd $ fossilAnchor fossil
-    stemOrRoot = maybe root SPath $ fossilPath fossil StemL
+    root = pathFromPoint $ ellipseCentre $ snd $ fossilAnchor fossil
+    stemOrRoot = fromMaybe root $ fossilPath fossil StemL
     parent (Branch lr n off)
-        | null off = SPath $ fromJust $ fossilPath fossil FrondL
-        | otherwise = SPath $ fromJust $ fossilPath fossil $ Branch lr n ""
+        | null off = fromJust $ fossilPath fossil FrondL
+        | otherwise = fromJust $ fossilPath fossil $ Branch lr n ""
     parent _ = error "parent on not a branch"
 
     f name x = [(name, csv x)]
