@@ -32,13 +32,15 @@ data Info = Info
     deriving (Show)
 
 -- | Given the identifier and its label, create the info.
-info :: Ident -> Label -> (Info, Part)
-info i@(Ident ident) label = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
-    [surface, specimen, part] -> (Info (Fossil $ surface ++ "_" ++ specimen) label, toPart part)
+info :: Ident -> (Fossil, Part)
+info i@(Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
+    [surface, specimen, part] -> (Fossil $ surface ++ "_" ++ specimen, toPart part)
     _ -> error $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 
-groupByFossil :: [((Info, Part), a)] -> [(Fossil, [((Info, Part), a)])]
-groupByFossil res = groupSort [(infoFossil $ fst i, (i, s)) | (i, s) <- res]
-
-groupFossils :: (Ident -> Label) -> [(Ident, a)] ->  [(Fossil, [((Info, Part), a)])]
-groupFossils getLabel shapes = groupByFossil [(info i $ getLabel i, a) | (i, a) <- shapes]
+groupFossils :: (Ident -> Label) -> [(Ident, shape)] -> [(Info, [(Part, shape)])]
+groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- shapes, let (fossil, part) = info ident]
+  where
+    f :: (Fossil, [(Part, (Ident, shape))]) -> (Info, [(Part, shape)])
+    f (fossil, parts) = case catMaybes [lookup Pt parts, lookup Disc parts] of
+        [(ident, _)] -> (Info fossil $ getLabel ident, map (\(p, (_, s)) -> (p, s)) parts)
+        xs -> error $ "Fossil " ++ unFossil fossil ++ " must have pt or disc, but has " ++ show (length xs) ++ " of them"
