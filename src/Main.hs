@@ -7,7 +7,6 @@ import Control.Exception.Extra
 import Control.Monad
 import Csv
 import Data.Either.Extra
-import Data.List.Extra
 import Fossil
 import Labels
 import Svg
@@ -23,42 +22,39 @@ main = do
         shapes <- readFileShapes file
 
         let res = groupFossils getLabel shapes
-        let extraParts = nubOrd $ concatMap otherParts res
-        let ans = map (unroll extraParts) res
+        let ans = map unroll res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
-        let standardLabels = "Id,Label,Desc,Title,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
-        let title = map csv (splitOn "," standardLabels) ++ concat [[csv x, csv $ x ++ "A"] | x <- extraParts]
-        writeCsvFile (dropExtension file ++ "_dex.csv") $ title : good
+        writeCsvFile (dropExtension file ++ "_dex.csv") good
 
-unroll :: [String] -> Fossil -> [CsvCell]
-unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
-    csv fosName
-        : csv lblLabel
-        : csv lblDescription
-        : csv lblTitle
-        : map
-            csv
-            [ discX
-            , discY
-            , discRx
-            , discRy
-            , discA
-            , ang StemL
-            , len StemL
-            , len StemW
-            , ang FrondL
-            , len FrondL
-            , len FrondW
-            , len Length1
-            , len Length2
-            , len Width1
-            , len Width2
-            , disc2Rx
-            , disc2Ry
-            ]
-        ++ concat [[csv $ len $ Other x, csv $ ang $ Other x] | x <- extraParts]
+unroll :: Fossil -> [(String, CsvCell)]
+unroll fossil@Fossil{fosLabel = Label{..}, ..} =
+    [ f "Id" fosName
+    , f "Label" lblLabel
+    , f "Desc" lblDescription
+    , f "Title" lblTitle
+    , f "DiscX" discX
+    , f "DiscY" discY
+    , f "DiscCx" discRx
+    , f "DiscCy" discRy
+    , f "DistA" discA
+    , f "StemA" $ ang StemL
+    , f "StemL" $ len StemL
+    , f "StemW" $ len StemW
+    , f "FrondA" $ ang FrondL
+    , f "FrondL" $ len FrondL
+    , f "FrontW" $ len FrondW
+    , f "Length1" $ len Length1
+    , f "Length2" $ len Length2
+    , f "Width1" $ len Width1
+    , f "Width2" $ len Width2
+    , f "Disc2Cx" disc2Rx
+    , f "Disc2Cy" disc2Ry
+    ]
+        ++ concat [[f x $ len $ Other x, f (x ++ "A") $ ang $ Other x] | x <- otherParts fossil]
   where
+    f name x = (name, csv x)
+
     (centre@(XY discX discY), (discRx, discRy), discA) = case fossilAnchor fossil of
         (Pt, e) -> (ellipseCentre e, (0, 0), 0)
         (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
