@@ -27,11 +27,8 @@ main = do
         let ans = map (unroll extraParts) res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
-        let title =
-                map csv $
-                    splitOn "," $
-                        "Id,Label,Desc,Title,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
-                            ++ concat ["," ++ x ++ "," ++ x ++ "A" | x <- extraParts]
+        let standardLabels = "Id,Label,Desc,Title,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
+        let title = map csv (splitOn "," standardLabels) ++ concat [[csv x, csv $ x ++ "A"] | x <- extraParts]
         writeCsvFile (dropExtension file ++ "_dex.csv") $ title : good
 
 unroll :: [String] -> Fossil -> [CsvCell]
