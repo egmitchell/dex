@@ -83,11 +83,7 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
 
 -- | The angle of the ellipse, in degrees from north
 ellipseAngle :: AEllipse -> Angle
-ellipseAngle (AEllipse (XY_ x y) _ _ (XY_ xa ya)) = Angle $ reangle $ atan $ (xa - x) / (ya - y)
-  where
-    reangle radians = if v < 0 then v + 180 else v
-      where
-        v = radians / pi * 180
+ellipseAngle (AEllipse a _ _ b) = angleXY a b
 
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
