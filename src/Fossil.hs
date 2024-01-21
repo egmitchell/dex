@@ -73,4 +73,4 @@ errorFossil :: String -> String -> a
 errorFossil fosName msg = errorWithoutStackTrace $ "Fossil " ++ fosName ++ ": " ++ msg
 
 otherParts :: Fossil -> [String]
-otherParts fos = [x | (Other x, _) <- fosParts fos]
+otherParts fos = sort [x | (Other x, _) <- fosParts fos]
