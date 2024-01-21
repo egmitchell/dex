@@ -2,7 +2,7 @@
   Each part for a given prefix is unique.
   Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
 -}
-module Fossil (Part (..), Fossil (..), groupFossils, fossilPath, fossilEllipse, fossilAnchor) where
+module Fossil (Part (..), Fossil (..), groupFossils, fossilPath, fossilEllipse, fossilAnchor, otherParts) where
 
 import Data.List.Extra
 import Data.Maybe
@@ -71,3 +71,6 @@ fossilEllipse fos part = fmap f $ lookup part $ fosParts fos
 
 errorFossil :: String -> String -> a
 errorFossil fosName msg = errorWithoutStackTrace $ "Fossil " ++ fosName ++ ": " ++ msg
+
+otherParts :: Fossil -> [String]
+otherParts fos = [x | (Other x, _) <- fosParts fos]
