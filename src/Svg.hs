@@ -81,6 +81,14 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
+-- | The angle of the ellipse, in degrees from north
+ellipseAngle :: AEllipse -> Angle
+ellipseAngle (AEllipse (XY_ x y) _ _ (XY_ xa ya)) = Angle $ reangle $ atan $ (xa - x) / (ya - y)
+  where
+    reangle radians = if v < 0 then v + 180 else v
+      where
+        v = radians / pi * 180
+
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
 pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
@@ -108,14 +116,6 @@ ellipseCentre (AEllipse a _ _ _) = a
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)
 ellipseSize (AEllipse _ (X rx) (Y ry) _) = (max rx ry * 2, min rx ry * 2)
-
--- | The angle of the ellipse, in degrees from north
-ellipseAngle :: AEllipse -> Angle
-ellipseAngle (AEllipse (XY_ x y) _ _ (XY_ xa ya)) = Angle $ reangle $ atan $ (xa - x) / (ya - y)
-  where
-    reangle radians = if v < 0 then v + 180 else v
-      where
-        v = radians / pi * 180
 
 transformation :: Transformation -> XY -> XY
 transformation (TransformMatrix a b c d e f) (XY_ x y) = XY_ (a * x + c * y + e) (b * x + d * y + f)
