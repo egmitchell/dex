@@ -30,10 +30,10 @@ main = do
                     ++ concat ["," ++ x ++ "," ++ x ++ "A" | x <- extraParts]
         writeFile (dropExtension file ++ "_dex.csv") $ unlines $ title : good
 
-unroll :: [String] -> (String, [(Info, Shape)]) -> String
-unroll extraParts (surface, parts) =
+unroll :: [String] -> (Fossil, [(Info, Shape)]) -> String
+unroll extraParts (fossil, parts) =
     intercalate "," $
-        show surface
+        show (unFossil fossil)
             : show (lblLabel $ infoLabel i)
             : show (lblDescription $ infoLabel i)
             : map show [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
@@ -44,7 +44,7 @@ unroll extraParts (surface, parts) =
     (i, discX, discY, discRx, discRy, discA) = case filter ((/= Left Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
         [(i@Info{infoPart = Left Pt}, SEllipse (XY x y) _ _ _)] -> (i, x, y, 0, 0, 0)
         [(i@Info{infoPart = Left Disc}, SEllipse (XY x y) rx ry (XY xa ya))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
-        bad -> err $ "Wrong number of discs for " ++ surface ++ ", got " ++ show bad
+        bad -> err $ "Wrong number of discs for " ++ unFossil fossil ++ ", got " ++ show bad
 
     reangle radians = if v < 0 then v + 180 else v
       where
@@ -54,7 +54,7 @@ unroll extraParts (surface, parts) =
     fAny x = case [pathLength ps | (i, SPath ps) <- parts, infoPart i == x] of
         [] -> 0
         [x] -> x
-        xs -> err $ "Wrong number of " ++ show x ++ " for " ++ surface ++ ", got " ++ show (length xs)
+        xs -> err $ "Wrong number of " ++ show x ++ " for " ++ unFossil fossil ++ ", got " ++ show (length xs)
 
     g = head $ [(rx * 2, ry * 2) | (i, SEllipse _ rx ry _) <- parts, infoPart i == Left Disc2] ++ [(0, 0)]
 
