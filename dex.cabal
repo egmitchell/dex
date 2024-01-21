@@ -15,6 +15,7 @@ executable dex
         ghc-options:  -Wno-x-partial
 
     other-modules:
+        Csv
         Info
         Labels
         Svg

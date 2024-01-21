@@ -3,6 +3,7 @@ module Main (main) where
 import Control.DeepSeq
 import Control.Exception.Extra
 import Control.Monad
+import Csv
 import Data.Either.Extra
 import Data.List.Extra
 import Data.Tuple.Extra
@@ -26,19 +27,20 @@ main = do
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         let title =
-                "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
-                    ++ concat ["," ++ x ++ "," ++ x ++ "A" | x <- extraParts]
-        writeFile (dropExtension file ++ "_dex.csv") $ unlines $ title : good
+                map csv $
+                    splitOn "," $
+                        "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
+                            ++ concat ["," ++ x ++ "," ++ x ++ "A" | x <- extraParts]
+        writeCsvFile (dropExtension file ++ "_dex.csv") $ title : good
 
-unroll :: [String] -> (Fossil, [(Info, Shape)]) -> String
+unroll :: [String] -> (Fossil, [(Info, Shape)]) -> [CsvCell]
 unroll extraParts (fossil, parts) =
-    intercalate "," $
-        show (unFossil fossil)
-            : show (lblLabel $ infoLabel i)
-            : show (lblDescription $ infoLabel i)
-            : map show [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
-            ++ concat [[show $ f $ Other x, show $ angle $ Other x] | x <- extraParts]
-            ++ splitOn "-" (lblTitle $ infoLabel i)
+    csv (unFossil fossil)
+        : csv (lblLabel $ infoLabel i)
+        : csv (lblDescription $ infoLabel i)
+        : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
+        ++ concat [[csv $ f $ Other x, csv $ angle $ Other x] | x <- extraParts]
+        ++ map csv (splitOn "-" (lblTitle $ infoLabel i))
   where
     err = errorWithoutStackTrace
     (i, discX, discY, discRx, discRy, discA) = case filter ((/= Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
