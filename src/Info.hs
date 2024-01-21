@@ -24,18 +24,16 @@ data Info = Info
     -- ^ The Svg identifier.
     , infoFossil :: Fossil
     -- ^ The fossil this represents.
-    , infoPart :: Part
-    -- ^ The part of the fossil this shape applies to.
     , infoLabel :: Label
     -- ^ The label information associated with it.
     }
     deriving (Show)
 
 -- | Given the identifier and its label, create the info.
-info :: Ident -> Label -> Info
-info i@(Ident ident) = Info i (Fossil $ intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts)
+info :: Ident -> Label -> (Info, Part)
+info i@(Ident ident) label = (Info i (Fossil $ intercalate "_" $ take 2 parts) label, toPart $ concat $ take 1 $ drop 2 parts)
   where
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
 
-groupByFossil :: [(Info, a)] -> [(Fossil, [(Info, a)])]
-groupByFossil res = groupSort [(infoFossil i, (i, s)) | (i, s) <- res]
+groupByFossil :: [((Info, Part), a)] -> [(Fossil, [((Info, Part), a)])]
+groupByFossil res = groupSort [(infoFossil $ fst i, (i, s)) | (i, s) <- res]
