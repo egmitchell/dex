@@ -20,9 +20,7 @@ toPart x = fromMaybe (Other x) $ lookup (lower x) builtin
 
 -- | Information derived from the Svg identifier, associated with a 'Shape'.
 data Info = Info
-    { infoId :: Ident
-    -- ^ The Svg identifier.
-    , infoFossil :: Fossil
+    { infoFossil :: Fossil
     -- ^ The fossil this represents.
     , infoLabel :: Label
     -- ^ The label information associated with it.
@@ -31,7 +29,7 @@ data Info = Info
 
 -- | Given the identifier and its label, create the info.
 info :: Ident -> Label -> (Info, Part)
-info i@(Ident ident) label = (Info i (Fossil $ intercalate "_" $ take 2 parts) label, toPart $ concat $ take 1 $ drop 2 parts)
+info i@(Ident ident) label = (Info (Fossil $ intercalate "_" $ take 2 parts) label, toPart $ concat $ take 1 $ drop 2 parts)
   where
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
 
