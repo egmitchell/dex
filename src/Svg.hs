@@ -15,6 +15,7 @@ module Svg (
     pathsJoin,
     pathFinalAngle,
     pathAngles,
+    anglesBetween,
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
@@ -84,6 +85,14 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
 -- | The angle of the ellipse, in degrees from north
 ellipseAngle :: AEllipse -> Angle
 ellipseAngle (AEllipse a _ _ b) = angleXY a b
+
+anglesBetween :: [Angle] -> [Angle]
+anglesBetween xs = zipWith angleDiff xs (tail xs)
+
+angleDiff :: Angle -> Angle -> Angle
+angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
+  where
+    r = b - a
 
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double

@@ -77,4 +77,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angles lbl relative typ = case fossilPath fossil typ of
         Nothing -> []
-        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ pathAngles $ snd $ pathsJoin relative path]
+        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ g $ pathsJoin relative path]
+          where
+            g (before, x) = anglesBetween $ pathFinalAngle before : pathAngles x
