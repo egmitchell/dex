@@ -10,7 +10,7 @@ import Labels
 import Svg
 
 data Part = FrondW | FrondL | Disc | Pt | Disc2 | StemW | StemL | Length1 | Length2 | Width1 | Width2 | Other String
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 toPart :: String -> Part
 toPart x = fromMaybe (Other x) $ lookup (lower x) builtin
@@ -36,6 +36,11 @@ groupFossils :: (Ident -> Label) -> [(Ident, shape)] -> [(Fossil, [(Part, shape)
 groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- shapes, let (fossil, part) = info ident]
   where
     f :: (String, [(Part, (Ident, shape))]) -> (Fossil, [(Part, shape)])
-    f (fossil, parts) = case catMaybes [lookup Pt parts, lookup Disc parts] of
-        [(ident, _)] -> (Fossil fossil $ getLabel ident, map (\(p, (_, s)) -> (p, s)) parts)
-        xs -> error $ "Fossil " ++ fossil ++ " must have pt or disc, but has " ++ show (length xs) ++ " of them"
+    f (fossil, parts)
+        | dupes@(_ : _) <- duplicates $ map fst parts = error $ "Fossil " ++ fossil ++ " has duplicate parts for " ++ show dupes
+        | otherwise = case catMaybes [lookup Pt parts, lookup Disc parts] of
+            [(ident, _)] -> (Fossil fossil $ getLabel ident, map (\(p, (_, s)) -> (p, s)) parts)
+            xs -> error $ "Fossil " ++ fossil ++ " must have pt or disc, but has " ++ show (length xs) ++ " of them"
+
+    duplicates :: (Ord a) => [a] -> [a]
+    duplicates xs = [x | (x : _ : _) <- group $ sort xs]
