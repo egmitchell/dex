@@ -4,7 +4,7 @@ module Svg (
     Ident (..),
     Shape (..),
     APath (..),
-    AEllipse (..),
+    AEllipse,
     XY (..),
     isEllipse,
     readFileShapes,
