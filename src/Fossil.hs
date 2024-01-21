@@ -73,7 +73,7 @@ groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape)
     f :: (String, [(Part, (Ident, Shape))]) -> Fossil
     f (fossil, parts)
         | dupes@(_ : _) <- duplicates $ map fst parts = errorFossil fossil $ "has duplicate parts for " ++ show dupes
-        | otherwise = Fossil fossil (getLabel $ fst $ snd $ lookupAnchor fossil parts) $ map (\(p, (_, s)) -> (p, s)) parts
+        | otherwise = Fossil fossil (getLabel $ fst $ snd $ lookupAnchor fossil parts) $ sortOn fst $ map (\(p, (_, s)) -> (p, s)) parts
 
     duplicates :: (Ord a) => [a] -> [a]
     duplicates xs = [x | (x : _ : _) <- group $ sort xs]
@@ -106,4 +106,4 @@ errorFossil :: String -> String -> a
 errorFossil fosName msg = errorWithoutStackTrace $ "Fossil " ++ fosName ++ ": " ++ msg
 
 otherParts :: Fossil -> [String]
-otherParts fos = sort [x | (Other x, _) <- fosParts fos]
+otherParts fos = [x | (Other x, _) <- fosParts fos]
