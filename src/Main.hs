@@ -51,6 +51,7 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     , f "Disc2Cx" disc2Rx
     , f "Disc2Cy" disc2Ry
     ]
+        ++ concat [[f (show o) $ len o, f (show o ++ "A") $ ang o] | (o@Branch{}, _) <- fosParts]
         ++ concat [[f x $ len o, f (x ++ "A") $ ang o] | (o@(Other x), _) <- fosParts]
   where
     f name x = (name, csv x)
