@@ -45,7 +45,7 @@ unroll extraParts (info, parts) =
     (discX, discY, discRx, discRy, discA) = case filter ((/= Disc2) . fst) $ filter (isEllipse . snd) parts of
         [(Pt, SEllipse (AEllipse (XY x y) _ _ _))] -> (x, y, 0, 0, 0)
         [(Disc, SEllipse (AEllipse (XY x y) rx ry (XY xa ya)))] -> (x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
-        bad -> err $ "Wrong number of discs for " ++ unFossil (infoFossil info) ++ ", got " ++ show bad
+        bad -> err $ "Wrong number of discs for " ++ infoFossil info ++ ", got " ++ show bad
 
     reangle radians = if v < 0 then v + 180 else v
       where
@@ -54,7 +54,7 @@ unroll extraParts (info, parts) =
     f x = case [pathLength ps | (i, SPath ps) <- parts, i == x] of
         [] -> 0
         [x] -> x
-        xs -> err $ "Wrong number of " ++ show x ++ " for " ++ unFossil (infoFossil info)  ++ ", got " ++ show (length xs)
+        xs -> err $ "Wrong number of " ++ show x ++ " for " ++ infoFossil info ++ ", got " ++ show (length xs)
 
     g = head $ [(rx * 2, ry * 2) | (i, SEllipse (AEllipse _ rx ry _)) <- parts, i == Disc2] ++ [(0, 0)]
 
