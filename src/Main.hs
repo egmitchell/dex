@@ -43,11 +43,9 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
         : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
         ++ concat [[csv $ f $ Other x, csv $ angle $ Other x] | x <- extraParts]
   where
-    err = errorWithoutStackTrace
-    (discX, discY, discRx, discRy, discA) = case filter ((/= Disc2) . fst) $ filter (isEllipse . snd) fosParts of
-        [(Pt, SEllipse (AEllipse (XY x y) _ _ _))] -> (x, y, 0, 0, 0)
-        [(Disc, SEllipse (AEllipse (XY x y) rx ry (XY xa ya)))] -> (x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
-        bad -> err $ "Wrong number of discs for " ++ fosName ++ ", got " ++ show bad
+    (discX, discY, discRx, discRy, discA) = case fossilAnchor fossil of
+        (Pt, AEllipse (XY x y) _ _ _) -> (x, y, 0, 0, 0)
+        (Disc, AEllipse (XY x y) rx ry (XY xa ya)) -> (x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
 
     reangle radians = if v < 0 then v + 180 else v
       where

@@ -2,7 +2,7 @@
   Each part for a given prefix is unique.
   Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
 -}
-module Fossil (Part (..), Fossil (..), groupFossils, fossilPath, fossilEllipse) where
+module Fossil (Part (..), Fossil (..), groupFossils, fossilPath, fossilEllipse, fossilAnchor) where
 
 import Data.List.Extra
 import Data.Maybe
@@ -40,12 +40,22 @@ groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape)
     f :: (String, [(Part, (Ident, Shape))]) -> Fossil
     f (fossil, parts)
         | dupes@(_ : _) <- duplicates $ map fst parts = error $ "Fossil " ++ fossil ++ " has duplicate parts for " ++ show dupes
-        | otherwise = case catMaybes [lookup Pt parts, lookup Disc parts] of
-            [(ident, _)] -> Fossil fossil (getLabel ident) $ map (\(p, (_, s)) -> (p, s)) parts
-            xs -> error $ "Fossil " ++ fossil ++ " must have pt or disc, but has " ++ show (length xs) ++ " of them"
+        | otherwise = Fossil fossil (getLabel $ fst $ snd $ lookupAnchor fossil parts) $ map (\(p, (_, s)) -> (p, s)) parts
 
     duplicates :: (Ord a) => [a] -> [a]
     duplicates xs = [x | (x : _ : _) <- group $ sort xs]
+
+lookupAnchor :: String -> [(Part, a)] -> (Part, a)
+lookupAnchor fosName parts = case (lookup Pt parts, lookup Disc parts) of
+    (Just x, Nothing) -> (Pt, x)
+    (Nothing, Just x) -> (Disc, x)
+    (a, b) -> error $ "Fossil " ++ fosName ++ " must have pt or disc, but has " ++ show (length $ catMaybes [a, b]) ++ " of them"
+
+-- | Find the anchor for this fossil, must be either a Pt or Disc.
+fossilAnchor :: Fossil -> (Part, AEllipse)
+fossilAnchor fos = (part, fromJust $ fossilEllipse fos part)
+  where
+    (part, _) = lookupAnchor (fosName fos) (fosParts fos)
 
 fossilPath :: Fossil -> Part -> Maybe APath
 fossilPath fos part = fmap f $ lookup part $ fosParts fos
