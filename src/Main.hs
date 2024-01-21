@@ -59,7 +59,7 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
             ]
         ++ concat [[csv $ len $ Other x, csv $ ang $ Other x] | x <- extraParts]
   where
-    (XY discX discY, (discRx, discRy), discA) = case fossilAnchor fossil of
+    (centre@(XY discX discY), (discRx, discRy), discA) = case fossilAnchor fossil of
         (Pt, e) -> (ellipseCentre e, (0, 0), 0)
         (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
 
@@ -73,4 +73,4 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
       where
         pathAngle (APath stemPath) = angleXY a b
           where
-            (a : b : _) = if distanceXY (last stemPath) (XY discX discY) < distanceXY (head stemPath) (XY discX discY) then reverse stemPath else stemPath
+            (a : b : _) = if distanceXY (last stemPath) centre < distanceXY (head stemPath) centre then reverse stemPath else stemPath
