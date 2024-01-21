@@ -21,7 +21,7 @@ main = do
         shapes <- readFileShapes file
         let res = map (first $ \id -> info id $ labels id) shapes
         let extraParts = nubOrd [x | Right x <- map (infoPart . fst) res, x `notElem` ["frondleft", "frondright"]]
-        let ans = map (unroll extraParts) $ groupSort [(infoSurface i, (i, s)) | (i, s) <- res]
+        let ans = map (unroll extraParts) $ groupSort [(infoFossil i, (i, s)) | (i, s) <- res]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         let title =
@@ -78,7 +78,7 @@ toPart = \x -> maybe (Right x) Left $ lookup (lower x) xs
 
 data Info = Info
     { infoId :: Ident
-    , infoSurface :: String
+    , infoFossil :: String
     , infoPart :: Either Part String
     , infoLabel :: Label
     }
