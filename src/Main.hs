@@ -65,7 +65,7 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     f name x = [(name, csv x)]
 
     (XY discX discY, (discCx, discCy), discA) = case fossilAnchor fossil of
-        (Pt, e) -> (ellipseCentre e, (0, 0), 0)
+        (Pt, e) -> (ellipseCentre e, (0, 0), zeroAngle)
         (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
         _ -> error "fossilAnchor of wrong type"
 

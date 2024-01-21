@@ -8,6 +8,7 @@ module Svg (
     APath,
     AEllipse,
     XY (..),
+    zeroAngle,
     readFileShapes,
     pathFromPoint,
     pathLength,
@@ -35,6 +36,11 @@ data XY = XY X Y deriving (Show)
 {-# COMPLETE XY_ #-}
 pattern XY_ :: Double -> Double -> XY
 pattern XY_ x y = XY (X x) (Y y)
+
+newtype Angle = Angle Double deriving (Show, Csv)
+
+zeroAngle :: Angle
+zeroAngle = Angle 0
 
 data Shape
     = SPath APath
@@ -70,8 +76,8 @@ distanceXY (XY_ x1 y1) (XY_ x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
   where
     sqr x = x * x
 
-angleXY :: XY -> XY -> Double
-angleXY (XY_ x1 y1) (XY_ x2 y2) = if r < 0 then r + 360 else r
+angleXY :: XY -> XY -> Angle
+angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
@@ -86,13 +92,13 @@ pathsJoin as bs = minimumOn f [(as, bs), (as, r bs), (r as, bs), (r as, r bs)]
     r (APath xs) = APath $ reverse xs
     f (APath as, APath bs) = distanceXY (last as) (head bs)
 
-pathFinalAngle :: APath -> Double
+pathFinalAngle :: APath -> Angle
 pathFinalAngle (APath xs) = case reverse xs of
     a : b : _ -> angleXY b a
-    _ -> 0
+    _ -> Angle 0
 
 -- | Find each successive angle in a path
-pathAngles :: APath -> [Double]
+pathAngles :: APath -> [Angle]
 pathAngles (APath xs) = zipWith angleXY xs (tail xs)
 
 -- | The centre-point of an ellipse
@@ -104,8 +110,8 @@ ellipseSize :: AEllipse -> (Double, Double)
 ellipseSize (AEllipse _ (X rx) (Y ry) _) = (max rx ry * 2, min rx ry * 2)
 
 -- | The angle of the ellipse, in degrees from north
-ellipseAngle :: AEllipse -> Double
-ellipseAngle (AEllipse (XY_ x y) _ _ (XY_ xa ya)) = reangle $ atan $ (xa - x) / (ya - y)
+ellipseAngle :: AEllipse -> Angle
+ellipseAngle (AEllipse (XY_ x y) _ _ (XY_ xa ya)) = Angle $ reangle $ atan $ (xa - x) / (ya - y)
   where
     reangle radians = if v < 0 then v + 180 else v
       where
