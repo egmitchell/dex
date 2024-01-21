@@ -33,9 +33,9 @@ data Info = Info
 
 -- | Given the identifier and its label, create the info.
 info :: Ident -> Label -> (Info, Part)
-info i@(Ident ident) label = (Info (Fossil $ intercalate "_" $ take 2 parts) label, toPart $ concat $ take 1 $ drop 2 parts)
-  where
-    parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
+info i@(Ident ident) label = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
+    [surface, specimen, part] -> (Info (Fossil $ surface ++ "_" ++ specimen) label, toPart part)
+    _ -> error $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 
 groupByFossil :: [((Info, Part), a)] -> [(Fossil, [((Info, Part), a)])]
 groupByFossil res = groupSort [(infoFossil $ fst i, (i, s)) | (i, s) <- res]
