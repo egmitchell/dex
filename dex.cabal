@@ -16,6 +16,6 @@ executable dex
 
     other-modules:
         Csv
-        Info
+        Fossil
         Labels
         Svg

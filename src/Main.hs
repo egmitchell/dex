@@ -7,7 +7,7 @@ import Csv
 import Data.Either.Extra
 import Data.List.Extra
 import Data.Tuple.Extra
-import Info
+import Fossil
 import Labels
 import Svg
 import System.Environment
