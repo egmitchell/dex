@@ -23,7 +23,7 @@ main = do
         shapes <- readFileShapes file
 
         let res = groupFossils getLabel shapes
-        let extraParts = nubOrd (concatMap otherParts res) \\ ["frondleft", "frondright"]
+        let extraParts = nubOrd $ concatMap otherParts res
         let ans = map (unroll extraParts) res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
