@@ -32,10 +32,10 @@ info i@(Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident 
     [surface, specimen, part] -> (surface ++ "_" ++ specimen, toPart part)
     _ -> error $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 
-groupFossils :: (Ident -> Label) -> [(Ident, shape)] -> [(Fossil, [(Part, shape)])]
+groupFossils :: (Ident -> Label) -> [(Ident, Shape)] -> [(Fossil, [(Part, Shape)])]
 groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- shapes, let (fossil, part) = info ident]
   where
-    f :: (String, [(Part, (Ident, shape))]) -> (Fossil, [(Part, shape)])
+    f :: (String, [(Part, (Ident, Shape))]) -> (Fossil, [(Part, Shape)])
     f (fossil, parts)
         | dupes@(_ : _) <- duplicates $ map fst parts = error $ "Fossil " ++ fossil ++ " has duplicate parts for " ++ show dupes
         | otherwise = case catMaybes [lookup Pt parts, lookup Disc parts] of
