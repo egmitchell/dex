@@ -7,6 +7,7 @@ import Control.Exception.Extra
 import Control.Monad
 import Csv
 import Data.Either.Extra
+import Data.List.Extra (zipFrom)
 import Fossil
 import Labels
 import Svg
@@ -38,21 +39,23 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     , f "DiscCx" discCx
     , f "DiscCy" discCy
     , f "DistA" discA
-    , f "StemA" $ ang StemL
     , f "StemL" $ len StemL
-    , f "StemW" $ len StemW
-    , f "FrondA" $ ang FrondL
-    , f "FrondL" $ len FrondL
-    , f "FrontW" $ len FrondW
-    , f "Length1" $ len Length1
-    , f "Length2" $ len Length2
-    , f "Width1" $ len Width1
-    , f "Width2" $ len Width2
-    , f "Disc2Cx" disc2Cx
-    , f "Disc2Cy" disc2Cy
     ]
-        ++ concat [[f (show o) $ len o, f (show o ++ "A") $ ang o] | (o@Branch{}, _) <- fosParts]
-        ++ concat [[f x $ len o, f (x ++ "A") $ ang o] | (o@(Other x), _) <- fosParts]
+        ++ angles "StemA" StemL
+        ++ [ f "StemW" $ len StemW
+           , f "FrondL" $ len FrondL
+           ]
+        ++ angles "FrondA" FrondL
+        ++ [ f "FrontW" $ len FrondW
+           , f "Length1" $ len Length1
+           , f "Length2" $ len Length2
+           , f "Width1" $ len Width1
+           , f "Width2" $ len Width2
+           , f "Disc2Cx" disc2Cx
+           , f "Disc2Cy" disc2Cy
+           ]
+        ++ concat [f (show o) (len o) : angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
+        ++ concat [f x (len o) : angles (x ++ "A") o | (o@(Other x), _) <- fosParts]
   where
     f name x = (name, csv x)
 
@@ -67,6 +70,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     (disc2Cx, disc2Cy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
-    ang = maybe 0 pathAngle . fossilPath fossil
-      where
-        pathAngle = head . pathAngles . pathStartingFromPoint centre
+    angles lbl typ = case fossilPath fossil typ of
+        Nothing -> []
+        Just path -> [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ pathAngles $ pathStartingFromPoint centre path]
