@@ -42,8 +42,8 @@ unroll extraParts (surface, parts) =
   where
     err = errorWithoutStackTrace
     (i, discX, discY, discRx, discRy, discA) = case filter ((/= Left Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
-        [(i@Info{infoPart = Left Pt}, SEllipse (x, y) _ _ _)] -> (i, x, y, 0, 0, 0)
-        [(i@Info{infoPart = Left Disc}, SEllipse (x, y) rx ry (xa, ya))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
+        [(i@Info{infoPart = Left Pt}, SEllipse (XY x y) _ _ _)] -> (i, x, y, 0, 0, 0)
+        [(i@Info{infoPart = Left Disc}, SEllipse (XY x y) rx ry (XY xa ya))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
         bad -> err $ "Wrong number of discs for " ++ surface ++ ", got " ++ show bad
 
     reangle radians = if v < 0 then v + 180 else v
@@ -63,7 +63,7 @@ unroll extraParts (surface, parts) =
     angleAny typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
       where
         paths = [ps | (i, SPath ps) <- parts, infoPart i == typ]
-        pathNorm = if distanceXY (last stemPath) (discX, discY) < distanceXY (head stemPath) (discX, discY) then reverse stemPath else stemPath
+        pathNorm = if distanceXY (last stemPath) (XY discX discY) < distanceXY (head stemPath) (XY discX discY) then reverse stemPath else stemPath
           where
             stemPath = head paths
 

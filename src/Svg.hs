@@ -2,6 +2,7 @@
 
 module Svg (
     Shape (..),
+    XY (..),
     isEllipse,
     readFileShapes,
     pathLength,
@@ -15,7 +16,7 @@ import Linear.V2
 
 type X = Double
 type Y = Double
-type XY = (X, Y)
+data XY = XY X Y deriving (Show)
 
 data Shape
     = SPath [XY]
@@ -44,12 +45,12 @@ root ts x = case x of
     f at shp = [(fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
 
 distanceXY :: XY -> XY -> Double
-distanceXY (x1, y1) (x2, y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
+distanceXY (XY x1 y1) (XY x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
   where
     sqr x = x * x
 
 angleXY :: XY -> XY -> Double
-angleXY (x1, y1) (x2, y2) = if r < 0 then r + 360 else r
+angleXY (XY x1 y1) (XY x2 y2) = if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
@@ -57,12 +58,12 @@ pathLength :: [XY] -> Double
 pathLength xs = sum $ zipWith distanceXY (init xs) (tail xs)
 
 transformation :: Transformation -> XY -> XY
-transformation (TransformMatrix a b c d e f) (x, y) = (a * x + c * y + e, b * x + d * y + f)
-transformation (Translate e f) (x, y) = (x + e, y + f)
-transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (x, y) =
-    ( cos angle * (x - ox) - sin angle * (y - oy) + ox
-    , sin angle * (x - ox) + cos angle * (y - oy) + oy
-    )
+transformation (TransformMatrix a b c d e f) (XY x y) = XY (a * x + c * y + e) (b * x + d * y + f)
+transformation (Translate e f) (XY x y) = XY (x + e) (y + f)
+transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (XY x y) =
+    XY
+        (cos angle * (x - ox) - sin angle * (y - oy) + ox)
+        (sin angle * (x - ox) + cos angle * (y - oy) + oy)
   where
     angle = a * (pi / 180) -- Convert to radians
 transformation t _ = error $ "Unhandled transformation, " ++ show t
@@ -75,23 +76,23 @@ transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
 
 asLine :: Path -> Shape
-asLine Path{_pathDefinition = xs} = SPath $ f (0, 0) xs
+asLine Path{_pathDefinition = xs} = SPath $ f (XY 0 0) xs
   where
-    f (x, y) (p : ps) = case p of
+    f (XY x y) (p : ps) = case p of
         MoveTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
         LineTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
         CurveTo r ((_, _, V2 x y) : xys) -> go r x y $ CurveTo r xys : ps
-        LineTo r [] -> f (x, y) ps
-        CurveTo r [] -> f (x, y) ps
-        VerticalTo OriginRelative [y] -> f (x, y) $ LineTo OriginRelative [V2 0 y] : ps
-        EndPath -> f (x, y) ps
+        LineTo r [] -> f (XY x y) ps
+        CurveTo r [] -> f (XY x y) ps
+        VerticalTo OriginRelative [y] -> f (XY x y) $ LineTo OriginRelative [V2 0 y] : ps
+        EndPath -> f (XY x y) ps
         _ -> error $ "Unknown line segment: " ++ show p
       where
-        go OriginAbsolute x y rest = (x, y) : f (x, y) rest
-        go OriginRelative ((+ x) -> x) ((+ y) -> y) rest = (x, y) : f (x, y) rest
+        go OriginAbsolute x y rest = XY x y : f (XY x y) rest
+        go OriginRelative ((+ x) -> x) ((+ y) -> y) rest = XY x y : f (XY x y) rest
     f _ [] = []
 
 asRound :: Ellipse -> Shape
 asRound Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
-    SEllipse (x, y) rx ry $
-        if rx > ry then (x + rx, y) else (x, y + ry)
+    SEllipse (XY x y) rx ry $
+        if rx > ry then XY (x + rx) y else XY x (y + ry)
