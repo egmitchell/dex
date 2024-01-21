@@ -62,7 +62,7 @@ data Fossil = Fossil
 
 -- | Given the identifier and its label, create the info.
 info :: Ident -> (String, Part)
-info i@(Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
+info (Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
     [surface, specimen, part] -> (surface ++ "_" ++ specimen, toPart part)
     _ -> errorWithoutStackTrace $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 

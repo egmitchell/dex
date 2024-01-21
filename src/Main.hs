@@ -59,6 +59,7 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     (centre@(XY discX discY), (discRx, discRy), discA) = case fossilAnchor fossil of
         (Pt, e) -> (ellipseCentre e, (0, 0), 0)
         (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
+        _ -> error "fossilAnchor of wrong type"
 
     -- take the total length of the part
     len = maybe 0 pathLength . fossilPath fossil
