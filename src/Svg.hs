@@ -3,10 +3,9 @@
 module Svg (
     Ident (..),
     Shape (..),
-    APath (..),
+    APath,
     AEllipse,
     XY (..),
-    isEllipse,
     readFileShapes,
     pathLength,
     pathStartingFromPoint,
@@ -14,8 +13,6 @@ module Svg (
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
-    angleXY,
-    distanceXY,
 ) where
 
 import Data.Maybe
@@ -37,10 +34,6 @@ data Shape
 newtype APath = APath [XY] deriving (Show)
 
 data AEllipse = AEllipse XY X Y XY deriving (Show)
-
-isEllipse :: Shape -> Bool
-isEllipse SEllipse{} = True
-isEllipse _ = False
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do
