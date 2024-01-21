@@ -10,6 +10,7 @@ module Svg (
     readFileShapes,
     pathLength,
     pathStartingFromPoint,
+    pathAngles,
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
@@ -77,6 +78,10 @@ pathStartingFromPoint :: XY -> APath -> APath
 pathStartingFromPoint origin (APath xs)
     | distanceXY (last xs) origin < distanceXY (head xs) origin = APath $ reverse xs
     | otherwise = APath xs
+
+-- | Find each successive angle in a path
+pathAngles :: APath -> [Double]
+pathAngles (APath xs) = zipWith angleXY xs (tail xs)
 
 -- | The centre-point of an ellipse
 ellipseCentre :: AEllipse -> XY
