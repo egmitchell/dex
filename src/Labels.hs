@@ -10,14 +10,18 @@ import Text.HTML.TagSoup
 
 data Label = Label
     { lblLabel :: String
+    -- ^ The label given to the node
     , lblTitle :: String
+    -- ^ The title given to the node
     , lblDescription :: String
+    -- ^ The description given to the node
     }
     deriving (Show)
 
 defaultLabel :: Label
 defaultLabel = Label "" "" ""
 
+-- | Given an SVG file, produce a mapping between node identifiers and label information.
 readFileLabels :: FilePath -> IO (String -> Label)
 readFileLabels file = do
     tags <- parseTags <$> readFile' file
