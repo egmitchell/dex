@@ -48,8 +48,8 @@ root ts x = case x of
     None -> []
     GroupTree x -> concatMap (root $ fromMaybe [] (_transform $ _groupDrawAttributes x) ++ ts) $ _groupChildren x
     CircleTree (Circle a b c) -> root ts $ EllipseTree $ Ellipse a b c c
-    EllipseTree x -> f (_ellipseDrawAttributes x) $ asRound x
-    PathTree x -> f (_pathDrawAttributes x) $ asLine x
+    EllipseTree x -> f (_ellipseDrawAttributes x) $ SEllipse $ aEllipse x
+    PathTree x -> f (_pathDrawAttributes x) $ SPath $ aPath x
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
     f at shp = [(Ident $ fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
@@ -85,8 +85,8 @@ applyXY f (SEllipse (AEllipse xy x y a)) = SEllipse $ AEllipse (f xy) x y (f a) 
 transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
 
-asLine :: Path -> Shape
-asLine Path{_pathDefinition = xs} = SPath $ APath $ f (XY 0 0) xs
+aPath :: Path -> APath
+aPath Path{_pathDefinition = xs} = APath $ f (XY 0 0) xs
   where
     f (XY x y) (p : ps) = case p of
         MoveTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
@@ -102,8 +102,7 @@ asLine Path{_pathDefinition = xs} = SPath $ APath $ f (XY 0 0) xs
         go OriginRelative ((+ x) -> x) ((+ y) -> y) rest = XY x y : f (XY x y) rest
     f _ [] = []
 
-asRound :: Ellipse -> Shape
-asRound Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
-    SEllipse $
-        AEllipse (XY x y) rx ry $
-            if rx > ry then XY (x + rx) y else XY x (y + ry)
+aEllipse :: Ellipse -> AEllipse
+aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
+    AEllipse (XY x y) rx ry $
+        if rx > ry then XY (x + rx) y else XY x (y + ry)
