@@ -9,6 +9,7 @@ module Svg (
     isEllipse,
     readFileShapes,
     pathLength,
+    ellipseCentre,
     angleXY,
     distanceXY,
 ) where
@@ -67,6 +68,10 @@ angleXY (XY x1 y1) (XY x2 y2) = if r < 0 then r + 360 else r
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
 pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
+
+-- | The centre-point of an ellipse
+ellipseCentre :: AEllipse -> XY
+ellipseCentre (AEllipse a _ _ _) = a
 
 transformation :: Transformation -> XY -> XY
 transformation (TransformMatrix a b c d e f) (XY x y) = XY (a * x + c * y + e) (b * x + d * y + f)
