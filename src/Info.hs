@@ -1,5 +1,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+{- | A fossil is a set of shapes, all of which have an identifier, e.g. @photo1_sp75_part@.
+  Each part for a given prefix is unique.
+  Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
+-}
 module Info (Part (..), Info (..), info, Fossil (..), groupByFossil) where
 
 import Csv

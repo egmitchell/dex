@@ -59,7 +59,7 @@ unroll extraParts (fossil, parts) =
 
     g = head $ [(rx * 2, ry * 2) | (i, SEllipse (AEllipse _ rx ry _)) <- parts, snd i == Disc2] ++ [(0, 0)]
 
-    -- find either StemL if it exists, or FrondL if not
+    -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angle typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
       where
         paths = [ps | (i, SPath ps) <- parts, snd i == typ]
