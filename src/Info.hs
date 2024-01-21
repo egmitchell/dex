@@ -1,11 +1,14 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Info (Part (..), Info (..), info, Fossil (..), groupByFossil) where
 
+import Csv
 import Data.List.Extra
 import Data.Maybe
 import Labels
 import Svg
 
-newtype Fossil = Fossil {unFossil :: String} deriving (Show, Eq, Ord)
+newtype Fossil = Fossil {unFossil :: String} deriving (Show, Eq, Ord, Csv)
 
 data Part = FrondW | FrondL | Disc | Pt | Disc2 | StemW | StemL | Length1 | Length2 | Width1 | Width2 | Other String
     deriving (Show, Eq)

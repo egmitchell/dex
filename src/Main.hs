@@ -35,7 +35,7 @@ main = do
 
 unroll :: [String] -> (Fossil, [(Info, Shape)]) -> [CsvCell]
 unroll extraParts (fossil, parts) =
-    csv (unFossil fossil)
+    csv fossil
         : csv (lblLabel $ infoLabel i)
         : csv (lblDescription $ infoLabel i)
         : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
