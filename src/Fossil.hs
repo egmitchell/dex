@@ -2,7 +2,7 @@
   Each part for a given prefix is unique.
   Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
 -}
-module Fossil (Part (..), Fossil (..), groupFossils) where
+module Fossil (Part (..), Fossil (..), groupFossils, fossilPath, fossilEllipse) where
 
 import Data.List.Extra
 import Data.Maybe
@@ -46,3 +46,15 @@ groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape)
 
     duplicates :: (Ord a) => [a] -> [a]
     duplicates xs = [x | (x : _ : _) <- group $ sort xs]
+
+fossilPath :: Fossil -> Part -> Maybe APath
+fossilPath fos part = fmap f $ lookup part $ fosParts fos
+  where
+    f (SPath x) = x
+    f x = error $ "Fossil " ++ fosName fos ++ " part " ++ show part ++ " expected to be a line, but got " ++ show x
+
+fossilEllipse :: Fossil -> Part -> Maybe AEllipse
+fossilEllipse fos part = fmap f $ lookup part $ fosParts fos
+  where
+    f (SEllipse x) = x
+    f x = error $ "Fossil " ++ fosName fos ++ " part " ++ show part ++ " expected to be an ellipse, but got " ++ show x

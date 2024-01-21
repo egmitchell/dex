@@ -35,7 +35,7 @@ main = do
         writeCsvFile (dropExtension file ++ "_dex.csv") $ title : good
 
 unroll :: [String] -> Fossil -> [CsvCell]
-unroll extraParts Fossil{fosLabel = Label{..}, ..} =
+unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
     csv fosName
         : csv lblLabel
         : csv lblDescription
@@ -53,17 +53,15 @@ unroll extraParts Fossil{fosLabel = Label{..}, ..} =
       where
         v = radians / pi * 180
 
-    f x = case [pathLength ps | (i, SPath ps) <- fosParts, i == x] of
-        [] -> 0
-        [x] -> x
-        xs -> err $ "Wrong number of " ++ show x ++ " for " ++ fosName ++ ", got " ++ show (length xs)
+    f = maybe 0 pathLength . fossilPath fossil
 
-    g = head $ [(rx * 2, ry * 2) | (i, SEllipse (AEllipse _ rx ry _)) <- fosParts, i == Disc2] ++ [(0, 0)]
+    g = maybe (0, 0) discSize $ fossilEllipse fossil Disc2
+      where
+        discSize (AEllipse _ rx ry _) = (rx * 2, ry * 2)
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
-    angle typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
+    angle = maybe 0 pathAngle . fossilPath fossil
       where
-        paths = [ps | (i, SPath ps) <- fosParts, i == typ]
-        pathNorm = if distanceXY (last stemPath) (XY discX discY) < distanceXY (head stemPath) (XY discX discY) then reverse stemPath else stemPath
+        pathAngle (APath stemPath) = angleXY a b
           where
-            APath stemPath = head paths
+            (a : b : _) = if distanceXY (last stemPath) (XY discX discY) < distanceXY (head stemPath) (XY discX discY) then reverse stemPath else stemPath
