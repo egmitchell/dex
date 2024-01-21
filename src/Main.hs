@@ -20,8 +20,8 @@ main = do
     when (null files) $ fail "Run with a list of SVG files to process"
     forM_ files $ \file -> do
         getLabel <- readFileLabels file
-
         shapes <- readFileShapes file
+
         let res = groupFossils getLabel shapes
         let extraParts = nubOrd (concatMap otherParts res) \\ ["frondleft", "frondright"]
         let ans = map (unroll extraParts) res
