@@ -40,7 +40,7 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
         : csv lblLabel
         : csv lblDescription
         : csv lblTitle
-        : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
+        : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, disc2Rx, disc2Ry]
         ++ concat [[csv $ f $ Other x, csv $ angle $ Other x] | x <- extraParts]
   where
     (XY discX discY, (discRx, discRy), discA) = case fossilAnchor fossil of
@@ -49,7 +49,7 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
 
     f = maybe 0 pathLength . fossilPath fossil
 
-    g = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
+    (disc2Rx, disc2Ry) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angle = maybe 0 pathAngle . fossilPath fossil
