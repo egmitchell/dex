@@ -112,8 +112,8 @@ aPath Path{_pathDefinition = xs} = APath $ f (XY 0 0) xs
         MoveTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
         LineTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
         CurveTo r ((_, _, V2 x y) : xys) -> go r x y $ CurveTo r xys : ps
-        LineTo r [] -> f (XY x y) ps
-        CurveTo r [] -> f (XY x y) ps
+        LineTo _ [] -> f (XY x y) ps
+        CurveTo _ [] -> f (XY x y) ps
         VerticalTo OriginRelative [y] -> f (XY x y) $ LineTo OriginRelative [V2 0 y] : ps
         EndPath -> f (XY x y) ps
         _ -> error $ "Unknown line segment: " ++ show p
@@ -126,3 +126,4 @@ aEllipse :: Ellipse -> AEllipse
 aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
     AEllipse (XY x y) rx ry $
         if rx > ry then XY (x + rx) y else XY x (y + ry)
+aEllipse x = error $ "Ellipse of the type not normally produced by Inkscape, " ++ take 100 (show x)
