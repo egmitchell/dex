@@ -36,7 +36,23 @@ data Part
       --   Null string means main branch, otherwise an offshoot of the given branch
       Branch LR Int String
     | Other String
-    deriving (Show, Eq, Ord)
+    deriving (Eq, Ord)
+
+instance Show Part where
+    show x = case x of
+        FrondW -> "FrondW"
+        FrondL -> "FrondL"
+        Disc -> "Disc"
+        Pt -> "Pt"
+        Disc2 -> "Disc2"
+        StemW -> "StemW"
+        StemL -> "StemL"
+        Length1 -> "Length1"
+        Length2 -> "Length2"
+        Width1 -> "Width1"
+        Width2 -> "Width2"
+        Branch lr i x -> show lr ++ "B" ++ show i ++ x
+        Other x -> x
 
 toPart :: String -> Part
 toPart x = case x of
