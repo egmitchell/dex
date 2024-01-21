@@ -10,7 +10,6 @@ module Fossil (
     fossilPath,
     fossilEllipse,
     fossilAnchor,
-    otherParts,
 ) where
 
 import Data.Char
@@ -104,6 +103,3 @@ fossilEllipse fos part = fmap f $ lookup part $ fosParts fos
 
 errorFossil :: String -> String -> a
 errorFossil fosName msg = errorWithoutStackTrace $ "Fossil " ++ fosName ++ ": " ++ msg
-
-otherParts :: Fossil -> [String]
-otherParts fos = [x | (Other x, _) <- fosParts fos]
