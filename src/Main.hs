@@ -37,7 +37,7 @@ unroll extraParts (fossil, parts) =
             : show (lblLabel $ infoLabel i)
             : show (lblDescription $ infoLabel i)
             : map show [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
-            ++ concat [[show $ fAny $ Other x, show $ angleAny $ Other x] | x <- extraParts]
+            ++ concat [[show $ f $ Other x, show $ angle $ Other x] | x <- extraParts]
             ++ splitOn "-" (lblTitle $ infoLabel i)
   where
     err = errorWithoutStackTrace
@@ -50,8 +50,7 @@ unroll extraParts (fossil, parts) =
       where
         v = radians / pi * 180
 
-    f = fAny
-    fAny x = case [pathLength ps | (i, SPath ps) <- parts, infoPart i == x] of
+    f x = case [pathLength ps | (i, SPath ps) <- parts, infoPart i == x] of
         [] -> 0
         [x] -> x
         xs -> err $ "Wrong number of " ++ show x ++ " for " ++ unFossil fossil ++ ", got " ++ show (length xs)
@@ -59,8 +58,7 @@ unroll extraParts (fossil, parts) =
     g = head $ [(rx * 2, ry * 2) | (i, SEllipse _ rx ry _) <- parts, infoPart i == Disc2] ++ [(0, 0)]
 
     -- find either StemL if it exists, or FrondL if not
-    angle = angleAny
-    angleAny typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
+    angle typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
       where
         paths = [ps | (i, SPath ps) <- parts, infoPart i == typ]
         pathNorm = if distanceXY (last stemPath) (XY discX discY) < distanceXY (head stemPath) (XY discX discY) then reverse stemPath else stemPath
