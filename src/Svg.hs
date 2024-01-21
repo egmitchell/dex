@@ -20,7 +20,6 @@ type XY = (X, Y)
 data Shape
     = SPath [XY]
     | SEllipse XY X Y XY
-    | SUnknown String
     deriving (Show)
 
 isEllipse :: Shape -> Bool
@@ -71,7 +70,6 @@ transformation t _ = error $ "Unhandled transformation, " ++ show t
 applyXY :: (XY -> XY) -> Shape -> Shape
 applyXY f (SPath xs) = SPath $ map f xs
 applyXY f (SEllipse xy x y a) = SEllipse (f xy) x y (f a) -- leave the radius untouched
-applyXY f (SUnknown x) = SUnknown x
 
 transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
