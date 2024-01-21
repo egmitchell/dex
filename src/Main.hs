@@ -43,9 +43,9 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
         : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
         ++ concat [[csv $ f $ Other x, csv $ angle $ Other x] | x <- extraParts]
   where
-    (XY discX discY, discRx, discRy, discA) = case fossilAnchor fossil of
-        (Pt, e) -> (ellipseCentre e, 0, 0, 0)
-        (Disc, e@(AEllipse (XY x y) rx ry (XY xa ya))) -> (ellipseCentre e, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
+    (XY discX discY, (discRx, discRy), discA) = case fossilAnchor fossil of
+        (Pt, e) -> (ellipseCentre e, (0, 0), 0)
+        (Disc, e@(AEllipse (XY x y) rx ry (XY xa ya))) -> (ellipseCentre e, ellipseSize e, reangle $ atan ((xa - x) / (ya - y)))
 
     reangle radians = if v < 0 then v + 180 else v
       where
@@ -53,9 +53,7 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
 
     f = maybe 0 pathLength . fossilPath fossil
 
-    g = maybe (0, 0) discSize $ fossilEllipse fossil Disc2
-      where
-        discSize (AEllipse _ rx ry _) = (rx * 2, ry * 2)
+    g = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angle = maybe 0 pathAngle . fossilPath fossil

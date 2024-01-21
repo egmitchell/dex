@@ -10,6 +10,7 @@ module Svg (
     readFileShapes,
     pathLength,
     ellipseCentre,
+    ellipseSize,
     angleXY,
     distanceXY,
 ) where
@@ -72,6 +73,10 @@ pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
 -- | The centre-point of an ellipse
 ellipseCentre :: AEllipse -> XY
 ellipseCentre (AEllipse a _ _ _) = a
+
+-- | The size of an ellipse. The larger of the two will always be returned first
+ellipseSize :: AEllipse -> (Double, Double)
+ellipseSize (AEllipse _ rx ry _) = (max rx ry * 2, min rx ry * 2)
 
 transformation :: Transformation -> XY -> XY
 transformation (TransformMatrix a b c d e f) (XY x y) = XY (a * x + c * y + e) (b * x + d * y + f)
