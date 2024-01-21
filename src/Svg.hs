@@ -1,6 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Svg (
+    Ident (..),
     Shape (..),
     XY (..),
     isEllipse,
@@ -13,6 +14,9 @@ module Svg (
 import Data.Maybe
 import Graphics.Svg
 import Linear.V2
+
+-- | An identifier (id) in an Svg file
+newtype Ident = Ident String deriving (Show)
 
 type X = Double
 type Y = Double
@@ -27,13 +31,13 @@ isEllipse :: Shape -> Bool
 isEllipse SEllipse{} = True
 isEllipse _ = False
 
-readFileShapes :: FilePath -> IO [(String, Shape)]
+readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do
     Just doc <- loadSvgFile file
     let Just (_, _, _, height) = _viewBox doc
     return $ concatMap (root [TransformMatrix 1 0 0 (-1) 0 height]) $ _elements doc
 
-root :: [Transformation] -> Tree -> [(String, Shape)]
+root :: [Transformation] -> Tree -> [(Ident, Shape)]
 root ts x = case x of
     None -> []
     GroupTree x -> concatMap (root $ fromMaybe [] (_transform $ _groupDrawAttributes x) ++ ts) $ _groupChildren x
@@ -42,7 +46,7 @@ root ts x = case x of
     PathTree x -> f (_pathDrawAttributes x) $ asLine x
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
-    f at shp = [(fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
+    f at shp = [(Ident $ fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
 
 distanceXY :: XY -> XY -> Double
 distanceXY (XY x1 y1) (XY x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)

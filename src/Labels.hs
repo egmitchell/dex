@@ -8,6 +8,8 @@ import Data.Maybe
 import System.IO
 import Text.HTML.TagSoup
 
+import Svg (Ident (..))
+
 data Label = Label
     { lblLabel :: String
     -- ^ The label given to the node
@@ -22,12 +24,12 @@ defaultLabel :: Label
 defaultLabel = Label "" "" ""
 
 -- | Given an SVG file, produce a mapping between node identifiers and label information.
-readFileLabels :: FilePath -> IO (String -> Label)
+readFileLabels :: FilePath -> IO (Ident -> Label)
 readFileLabels file = do
     tags <- parseTags <$> readFile' file
     let lbls = labels tags
     let descs = titleDesc tags
-    return $ \x ->
+    return $ \(Ident x) ->
         let (lblTitle, lblDescription) = fromMaybe ("", "") $ lookup x descs
             lblLabel = fromMaybe "" $ lookup x lbls
          in Label{..}

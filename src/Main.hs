@@ -78,14 +78,14 @@ toPart = \x -> maybe (Right x) Left $ lookup (lower x) xs
     xs = ("ives", Disc) : [(lower $ show x, x) | x <- [minBound .. maxBound]]
 
 data Info = Info
-    { infoId :: String
+    { infoId :: Ident
     , infoSurface :: String
     , infoPart :: Either Part String
     , infoLabel :: Label
     }
     deriving (Show)
 
-info :: String -> Info
-info ident = Info ident (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) defaultLabel
+info :: Ident -> Info
+info i@(Ident ident) = Info i (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) defaultLabel
   where
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
