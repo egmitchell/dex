@@ -44,20 +44,20 @@ unroll extraParts (fossil, parts) =
   where
     err = errorWithoutStackTrace
     (i, discX, discY, discRx, discRy, discA) = case filter ((/= Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
-        [(i@Info{infoPart = Pt}, SEllipse (XY x y) _ _ _)] -> (i, x, y, 0, 0, 0)
-        [(i@Info{infoPart = Disc}, SEllipse (XY x y) rx ry (XY xa ya))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
+        [(i@Info{infoPart = Pt}, SEllipse (AEllipse (XY x y) _ _ _))] -> (i, x, y, 0, 0, 0)
+        [(i@Info{infoPart = Disc}, SEllipse (AEllipse (XY x y) rx ry (XY xa ya)))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
         bad -> err $ "Wrong number of discs for " ++ unFossil fossil ++ ", got " ++ show bad
 
     reangle radians = if v < 0 then v + 180 else v
       where
         v = radians / pi * 180
 
-    f x = case [pathLength ps | (i, SPath ps) <- parts, infoPart i == x] of
+    f x = case [pathLength ps | (i, SPath (APath ps)) <- parts, infoPart i == x] of
         [] -> 0
         [x] -> x
         xs -> err $ "Wrong number of " ++ show x ++ " for " ++ unFossil fossil ++ ", got " ++ show (length xs)
 
-    g = head $ [(rx * 2, ry * 2) | (i, SEllipse _ rx ry _) <- parts, infoPart i == Disc2] ++ [(0, 0)]
+    g = head $ [(rx * 2, ry * 2) | (i, SEllipse (AEllipse _ rx ry _)) <- parts, infoPart i == Disc2] ++ [(0, 0)]
 
     -- find either StemL if it exists, or FrondL if not
     angle typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
@@ -65,4 +65,4 @@ unroll extraParts (fossil, parts) =
         paths = [ps | (i, SPath ps) <- parts, infoPart i == typ]
         pathNorm = if distanceXY (last stemPath) (XY discX discY) < distanceXY (head stemPath) (XY discX discY) then reverse stemPath else stemPath
           where
-            stemPath = head paths
+            APath stemPath = head paths

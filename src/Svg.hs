@@ -3,6 +3,8 @@
 module Svg (
     Ident (..),
     Shape (..),
+    APath (..),
+    AEllipse (..),
     XY (..),
     isEllipse,
     readFileShapes,
@@ -23,9 +25,13 @@ type Y = Double
 data XY = XY X Y deriving (Show)
 
 data Shape
-    = SPath [XY]
-    | SEllipse XY X Y XY
+    = SPath APath
+    | SEllipse AEllipse
     deriving (Show)
+
+newtype APath = APath [XY] deriving (Show)
+
+data AEllipse = AEllipse XY X Y XY deriving (Show)
 
 isEllipse :: Shape -> Bool
 isEllipse SEllipse{} = True
@@ -73,14 +79,14 @@ transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (XY x y) =
 transformation t _ = error $ "Unhandled transformation, " ++ show t
 
 applyXY :: (XY -> XY) -> Shape -> Shape
-applyXY f (SPath xs) = SPath $ map f xs
-applyXY f (SEllipse xy x y a) = SEllipse (f xy) x y (f a) -- leave the radius untouched
+applyXY f (SPath (APath xs)) = SPath $ APath $ map f xs
+applyXY f (SEllipse (AEllipse xy x y a)) = SEllipse $ AEllipse (f xy) x y (f a) -- leave the radius untouched
 
 transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
 
 asLine :: Path -> Shape
-asLine Path{_pathDefinition = xs} = SPath $ f (XY 0 0) xs
+asLine Path{_pathDefinition = xs} = SPath $ APath $ f (XY 0 0) xs
   where
     f (XY x y) (p : ps) = case p of
         MoveTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
@@ -98,5 +104,6 @@ asLine Path{_pathDefinition = xs} = SPath $ f (XY 0 0) xs
 
 asRound :: Ellipse -> Shape
 asRound Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
-    SEllipse (XY x y) rx ry $
-        if rx > ry then XY (x + rx) y else XY x (y + ry)
+    SEllipse $
+        AEllipse (XY x y) rx ry $
+            if rx > ry then XY (x + rx) y else XY x (y + ry)
