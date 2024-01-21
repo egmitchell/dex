@@ -17,10 +17,9 @@ main = do
     when (null files) $ fail "Run with a list of SVG files to process"
     forM_ files $ \file -> do
         labels <- readFileLabels file
-        let enrich i = i{infoLabel = labels $ infoId i}
 
         shapes <- readFileShapes file
-        let res = map (first $ enrich . info) shapes
+        let res = map (first $ \id -> info id $ labels id) shapes
         let extraParts = nubOrd [x | Right x <- map (infoPart . fst) res, x `notElem` ["frondleft", "frondright"]]
         let ans = map (unroll extraParts) $ groupSort [(infoSurface i, (i, s)) | (i, s) <- res]
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
@@ -85,7 +84,7 @@ data Info = Info
     }
     deriving (Show)
 
-info :: Ident -> Info
-info i@(Ident ident) = Info i (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts) defaultLabel
+info :: Ident -> Label -> Info
+info i@(Ident ident) = Info i (intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts)
   where
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident

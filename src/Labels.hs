@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
-module Labels (Label (..), defaultLabel, readFileLabels) where
+module Labels (Label (..), readFileLabels) where
 
 import Data.List.Extra
 import Data.Maybe
@@ -19,9 +19,6 @@ data Label = Label
     -- ^ The description given to the node
     }
     deriving (Show)
-
-defaultLabel :: Label
-defaultLabel = Label "" "" ""
 
 -- | Given an SVG file, produce a mapping between node identifiers and label information.
 readFileLabels :: FilePath -> IO (Ident -> Label)
