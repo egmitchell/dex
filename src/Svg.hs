@@ -11,6 +11,7 @@ module Svg (
     pathLength,
     ellipseCentre,
     ellipseSize,
+    ellipseAngle,
     angleXY,
     distanceXY,
 ) where
@@ -77,6 +78,14 @@ ellipseCentre (AEllipse a _ _ _) = a
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)
 ellipseSize (AEllipse _ rx ry _) = (max rx ry * 2, min rx ry * 2)
+
+-- | The angle of the ellipse, in degrees from north
+ellipseAngle :: AEllipse -> Double
+ellipseAngle (AEllipse (XY x y) _ _ (XY xa ya)) = reangle $ atan $ (xa - x) / (ya - y)
+  where
+    reangle radians = if v < 0 then v + 180 else v
+      where
+        v = radians / pi * 180
 
 transformation :: Transformation -> XY -> XY
 transformation (TransformMatrix a b c d e f) (XY x y) = XY (a * x + c * y + e) (b * x + d * y + f)

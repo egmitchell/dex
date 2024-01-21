@@ -45,11 +45,7 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
   where
     (XY discX discY, (discRx, discRy), discA) = case fossilAnchor fossil of
         (Pt, e) -> (ellipseCentre e, (0, 0), 0)
-        (Disc, e@(AEllipse (XY x y) rx ry (XY xa ya))) -> (ellipseCentre e, ellipseSize e, reangle $ atan ((xa - x) / (ya - y)))
-
-    reangle radians = if v < 0 then v + 180 else v
-      where
-        v = radians / pi * 180
+        (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
 
     f = maybe 0 pathLength . fossilPath fossil
 
