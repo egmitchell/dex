@@ -6,7 +6,6 @@ import Control.Monad
 import Csv
 import Data.Either.Extra
 import Data.List.Extra
-import Data.Tuple.Extra
 import Fossil
 import Labels
 import Svg
@@ -18,12 +17,12 @@ main = do
     files <- getArgs
     when (null files) $ fail "Run with a list of SVG files to process"
     forM_ files $ \file -> do
-        labels <- readFileLabels file
+        getLabel <- readFileLabels file
 
         shapes <- readFileShapes file
-        let res = map (first $ \id -> info id $ labels id) shapes
-        let extraParts = nubOrd [x | Other x <- map (snd . fst) res, x `notElem` ["frondleft", "frondright"]]
-        let ans = map (unroll extraParts) $ groupByFossil res
+        let res = groupFossils getLabel shapes
+        let extraParts = nubOrd [x | Other x <- map (snd . fst) $ concatMap snd res, x `notElem` ["frondleft", "frondright"]]
+        let ans = map (unroll extraParts) res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         let title =

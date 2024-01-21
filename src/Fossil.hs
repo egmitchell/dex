@@ -4,7 +4,7 @@
   Each part for a given prefix is unique.
   Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
 -}
-module Fossil (Part (..), Info (..), info, Fossil (..), groupByFossil) where
+module Fossil (Part (..), Info (..), Fossil (..), groupFossils) where
 
 import Csv
 import Data.List.Extra
@@ -39,3 +39,6 @@ info i@(Ident ident) label = case split (`elem` "-_") $ dropPrefix "sp" $ lower 
 
 groupByFossil :: [((Info, Part), a)] -> [(Fossil, [((Info, Part), a)])]
 groupByFossil res = groupSort [(infoFossil $ fst i, (i, s)) | (i, s) <- res]
+
+groupFossils :: (Ident -> Label) -> [(Ident, a)] ->  [(Fossil, [((Info, Part), a)])]
+groupFossils getLabel shapes = groupByFossil [(info i $ getLabel i, a) | (i, a) <- shapes]
