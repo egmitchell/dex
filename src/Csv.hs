@@ -5,7 +5,6 @@ module Csv (Csv (..), CsvCell, writeCsvFile) where
 
 import Control.DeepSeq
 import Data.Char
-import Data.List
 import Data.List.Extra
 import Data.Maybe
 
