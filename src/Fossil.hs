@@ -32,14 +32,14 @@ data Fossil = Fossil
 info :: Ident -> (String, Part)
 info i@(Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
     [surface, specimen, part] -> (surface ++ "_" ++ specimen, toPart part)
-    _ -> error $ "Identifier must have exactly 3 _ separated components, got " ++ ident
+    _ -> errorWithoutStackTrace $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 
 groupFossils :: (Ident -> Label) -> [(Ident, Shape)] -> [Fossil]
 groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- shapes, let (fossil, part) = info ident]
   where
     f :: (String, [(Part, (Ident, Shape))]) -> Fossil
     f (fossil, parts)
-        | dupes@(_ : _) <- duplicates $ map fst parts = error $ "Fossil " ++ fossil ++ " has duplicate parts for " ++ show dupes
+        | dupes@(_ : _) <- duplicates $ map fst parts = errorFossil fossil $ "has duplicate parts for " ++ show dupes
         | otherwise = Fossil fossil (getLabel $ fst $ snd $ lookupAnchor fossil parts) $ map (\(p, (_, s)) -> (p, s)) parts
 
     duplicates :: (Ord a) => [a] -> [a]
@@ -49,7 +49,7 @@ lookupAnchor :: String -> [(Part, a)] -> (Part, a)
 lookupAnchor fosName parts = case (lookup Pt parts, lookup Disc parts) of
     (Just x, Nothing) -> (Pt, x)
     (Nothing, Just x) -> (Disc, x)
-    (a, b) -> error $ "Fossil " ++ fosName ++ " must have pt or disc, but has " ++ show (length $ catMaybes [a, b]) ++ " of them"
+    (a, b) -> errorFossil fosName $ "must have pt or disc, but has " ++ show (length $ catMaybes [a, b]) ++ " of them"
 
 -- | Find the anchor for this fossil, must be either a Pt or Disc.
 fossilAnchor :: Fossil -> (Part, AEllipse)
@@ -61,10 +61,13 @@ fossilPath :: Fossil -> Part -> Maybe APath
 fossilPath fos part = fmap f $ lookup part $ fosParts fos
   where
     f (SPath x) = x
-    f x = error $ "Fossil " ++ fosName fos ++ " part " ++ show part ++ " expected to be a line, but got " ++ show x
+    f x = errorFossil (fosName fos) $ "part " ++ show part ++ " expected to be a line, but got " ++ show x
 
 fossilEllipse :: Fossil -> Part -> Maybe AEllipse
 fossilEllipse fos part = fmap f $ lookup part $ fosParts fos
   where
     f (SEllipse x) = x
-    f x = error $ "Fossil " ++ fosName fos ++ " part " ++ show part ++ " expected to be an ellipse, but got " ++ show x
+    f x = errorFossil (fosName fos) $ "part " ++ show part ++ " expected to be an ellipse, but got " ++ show x
+
+errorFossil :: String -> String -> a
+errorFossil fosName msg = errorWithoutStackTrace $ "Fossil " ++ fosName ++ ": " ++ msg
