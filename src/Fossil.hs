@@ -2,18 +2,51 @@
   Each part for a given prefix is unique.
   Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
 -}
-module Fossil (Part (..), Fossil (..), groupFossils, fossilPath, fossilEllipse, fossilAnchor, otherParts) where
+module Fossil (
+    Part (..),
+    LR (..),
+    Fossil (..),
+    groupFossils,
+    fossilPath,
+    fossilEllipse,
+    fossilAnchor,
+    otherParts,
+) where
 
+import Data.Char
 import Data.List.Extra
 import Data.Maybe
 import Labels
 import Svg
 
-data Part = FrondW | FrondL | Disc | Pt | Disc2 | StemW | StemL | Length1 | Length2 | Width1 | Width2 | Other String
+data LR = L | R deriving (Show, Eq, Ord)
+
+data Part
+    = FrondW
+    | FrondL
+    | Disc
+    | Pt
+    | Disc2
+    | StemW
+    | StemL
+    | Length1
+    | Length2
+    | Width1
+    | Width2
+    | -- | A branch which is left/right, index along that branch.
+      --   Null string means main branch, otherwise an offshoot of the given branch
+      Branch LR Int String
+    | Other String
     deriving (Show, Eq, Ord)
 
 toPart :: String -> Part
-toPart x = fromMaybe (Other x) $ lookup (lower x) builtin
+toPart x = case x of
+    _ | Just v <- lookup (lower x) builtin -> v
+    lr : 'B' : rest
+        | lr `elem` "LR"
+        , (a@(_ : _), b) <- span isDigit rest ->
+            Branch (if lr == 'L' then L else R) (read a) b
+    _ -> Other x
   where
     builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Disc2, StemW, StemL, Length1, Length2, Width1, Width2]]
 
