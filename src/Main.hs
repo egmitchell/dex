@@ -21,7 +21,7 @@ main = do
 
         shapes <- readFileShapes file
         let res = map (first $ \id -> info id $ labels id) shapes
-        let extraParts = nubOrd [x | Right x <- map (infoPart . fst) res, x `notElem` ["frondleft", "frondright"]]
+        let extraParts = nubOrd [x | Other x <- map (infoPart . fst) res, x `notElem` ["frondleft", "frondright"]]
         let ans = map (unroll extraParts) $ groupByFossil res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
@@ -37,29 +37,29 @@ unroll extraParts (fossil, parts) =
             : show (lblLabel $ infoLabel i)
             : show (lblDescription $ infoLabel i)
             : map show [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
-            ++ concat [[show $ fAny $ Right x, show $ angleAny $ Right x] | x <- extraParts]
+            ++ concat [[show $ fAny $ Other x, show $ angleAny $ Other x] | x <- extraParts]
             ++ splitOn "-" (lblTitle $ infoLabel i)
   where
     err = errorWithoutStackTrace
-    (i, discX, discY, discRx, discRy, discA) = case filter ((/= Left Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
-        [(i@Info{infoPart = Left Pt}, SEllipse (XY x y) _ _ _)] -> (i, x, y, 0, 0, 0)
-        [(i@Info{infoPart = Left Disc}, SEllipse (XY x y) rx ry (XY xa ya))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
+    (i, discX, discY, discRx, discRy, discA) = case filter ((/= Disc2) . infoPart . fst) $ filter (isEllipse . snd) parts of
+        [(i@Info{infoPart = Pt}, SEllipse (XY x y) _ _ _)] -> (i, x, y, 0, 0, 0)
+        [(i@Info{infoPart = Disc}, SEllipse (XY x y) rx ry (XY xa ya))] -> (i, x, y, max rx ry * 2, min rx ry * 2, reangle $ atan ((xa - x) / (ya - y)))
         bad -> err $ "Wrong number of discs for " ++ unFossil fossil ++ ", got " ++ show bad
 
     reangle radians = if v < 0 then v + 180 else v
       where
         v = radians / pi * 180
 
-    f = fAny . Left
+    f = fAny
     fAny x = case [pathLength ps | (i, SPath ps) <- parts, infoPart i == x] of
         [] -> 0
         [x] -> x
         xs -> err $ "Wrong number of " ++ show x ++ " for " ++ unFossil fossil ++ ", got " ++ show (length xs)
 
-    g = head $ [(rx * 2, ry * 2) | (i, SEllipse _ rx ry _) <- parts, infoPart i == Left Disc2] ++ [(0, 0)]
+    g = head $ [(rx * 2, ry * 2) | (i, SEllipse _ rx ry _) <- parts, infoPart i == Disc2] ++ [(0, 0)]
 
     -- find either StemL if it exists, or FrondL if not
-    angle = angleAny . Left
+    angle = angleAny
     angleAny typ = if null paths then 0 else angleXY (pathNorm !! 0) (pathNorm !! 1)
       where
         paths = [ps | (i, SPath ps) <- parts, infoPart i == typ]

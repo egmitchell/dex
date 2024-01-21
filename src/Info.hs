@@ -1,18 +1,19 @@
 module Info (Part (..), Info (..), info, Fossil (..), groupByFossil) where
 
 import Data.List.Extra
+import Data.Maybe
 import Labels
 import Svg
 
 newtype Fossil = Fossil {unFossil :: String} deriving (Show, Eq, Ord)
 
-data Part = FrondW | FrondL | Disc | Pt | Disc2 | StemW | StemL | Length1 | Length2 | Width1 | Width2
-    deriving (Enum, Bounded, Show, Eq)
+data Part = FrondW | FrondL | Disc | Pt | Disc2 | StemW | StemL | Length1 | Length2 | Width1 | Width2 | Other String
+    deriving (Show, Eq)
 
-toPart :: String -> Either Part String
-toPart = \x -> maybe (Right x) Left $ lookup (lower x) xs
+toPart :: String -> Part
+toPart x = fromMaybe (Other x) $ lookup (lower x) builtin
   where
-    xs = ("ives", Disc) : [(lower $ show x, x) | x <- [minBound .. maxBound]]
+    builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Disc2, StemW, StemL, Length1, Length2, Width1, Width2]]
 
 -- | Information derived from the Svg identifier, associated with a 'Shape'.
 data Info = Info
@@ -20,7 +21,7 @@ data Info = Info
     -- ^ The Svg identifier.
     , infoFossil :: Fossil
     -- ^ The fossil this represents.
-    , infoPart :: Either Part String
+    , infoPart :: Part
     -- ^ The part of the fossil this shape applies to.
     , infoLabel :: Label
     -- ^ The label information associated with it.
