@@ -40,7 +40,26 @@ unroll extraParts fossil@Fossil{fosLabel = Label{..}, ..} =
         : csv lblLabel
         : csv lblDescription
         : csv lblTitle
-        : map csv [discX, discY, discRx, discRy, discA, ang StemL, len StemL, len StemW, ang FrondL, len FrondL, len FrondW, len Length1, len Length2, len Width1, len Width2, disc2Rx, disc2Ry]
+        : map
+            csv
+            [ discX
+            , discY
+            , discRx
+            , discRy
+            , discA
+            , ang StemL
+            , len StemL
+            , len StemW
+            , ang FrondL
+            , len FrondL
+            , len FrondW
+            , len Length1
+            , len Length2
+            , len Width1
+            , len Width2
+            , disc2Rx
+            , disc2Ry
+            ]
         ++ concat [[csv $ len $ Other x, csv $ ang $ Other x] | x <- extraParts]
   where
     (XY discX discY, (discRx, discRy), discA) = case fossilAnchor fossil of
