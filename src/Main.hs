@@ -29,7 +29,7 @@ main = do
         let title =
                 map csv $
                     splitOn "," $
-                        "Id,Label,Desc,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
+                        "Id,Label,Desc,Title,DiscX,DiscY,DiscCx,DiscCy,DiscA,StemA,StemL,StemW,FrondA,FrondL,FrondW,Length1,Length2,Width1,Width2,Disc2Cx,Disc2Cy"
                             ++ concat ["," ++ x ++ "," ++ x ++ "A" | x <- extraParts]
         writeCsvFile (dropExtension file ++ "_dex.csv") $ title : good
 
@@ -38,9 +38,9 @@ unroll extraParts (fossil, parts) =
     csv fossil
         : csv (lblLabel $ infoLabel $ fst i)
         : csv (lblDescription $ infoLabel $ fst i)
+        : csv (lblTitle $ infoLabel $ fst i)
         : map csv [discX, discY, discRx, discRy, discA, angle StemL, f StemL, f StemW, angle FrondL, f FrondL, f FrondW, f Length1, f Length2, f Width1, f Width2, fst g, snd g]
         ++ concat [[csv $ f $ Other x, csv $ angle $ Other x] | x <- extraParts]
-        ++ map csv (splitOn "-" (lblTitle $ infoLabel $ fst i))
   where
     err = errorWithoutStackTrace
     (i, discX, discY, discRx, discRy, discA) = case filter ((/= Disc2) . snd . fst) $ filter (isEllipse . snd) parts of
