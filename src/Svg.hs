@@ -9,13 +9,15 @@ module Svg (
     readFileShapes,
     pathFromPoint,
     pathLength,
-    pathStartingFromPoint,
+    pathsJoin,
+    pathFinalAngle,
     pathAngles,
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
 ) where
 
+import Data.List.Extra
 import Data.Maybe
 import Graphics.Svg
 import Linear.V2
@@ -70,11 +72,17 @@ angleXY (XY x1 y1) (XY x2 y2) = if r < 0 then r + 360 else r
 pathLength :: APath -> Double
 pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
 
--- | Given a point, reorientate the path so it starts closest to that end
-pathStartingFromPoint :: XY -> APath -> APath
-pathStartingFromPoint origin (APath xs)
-    | distanceXY (last xs) origin < distanceXY (head xs) origin = APath $ reverse xs
-    | otherwise = APath xs
+-- | If necessary, reverse the paths so they join up with each other (as close as you can get)
+pathsJoin :: APath -> APath -> (APath, APath)
+pathsJoin as bs = minimumOn f [(as, bs), (as, r bs), (r as, bs), (r as, r bs)]
+  where
+    r (APath xs) = APath $ reverse xs
+    f (APath as, APath bs) = distanceXY (last as) (head bs)
+
+pathFinalAngle :: APath -> Double
+pathFinalAngle (APath xs) = case reverse xs of
+    a : b : _ -> angleXY b a
+    _ -> 0
 
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Double]

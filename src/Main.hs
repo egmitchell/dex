@@ -64,7 +64,7 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
 
     f name x = [(name, csv x)]
 
-    (centre@(XY discX discY), (discCx, discCy), discA) = case fossilAnchor fossil of
+    (XY discX discY, (discCx, discCy), discA) = case fossilAnchor fossil of
         (Pt, e) -> (ellipseCentre e, (0, 0), 0)
         (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
         _ -> error "fossilAnchor of wrong type"
@@ -75,6 +75,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     (disc2Cx, disc2Cy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
-    angles lbl _relative typ = case fossilPath fossil typ of
+    angles lbl relative typ = case fossilPath fossil typ of
         Nothing -> []
-        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ pathAngles $ pathStartingFromPoint centre path]
+        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ pathAngles $ snd $ pathsJoin relative path]
