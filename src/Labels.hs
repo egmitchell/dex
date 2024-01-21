@@ -45,5 +45,5 @@ titleDesc (TagOpen _ at : rest)
         , s1 `elem` ["desc", "title"] =
             f ((if s1 == "desc" then (a,) else (,b)) $ trim txt) id rest
     f ab id xs = (id, ab) : titleDesc xs
-titleDesc (x : xs) = titleDesc xs
+titleDesc (_ : xs) = titleDesc xs
 titleDesc [] = []
