@@ -1,4 +1,4 @@
-module Info (Part (..), Info (..), info, Fossil (..)) where
+module Info (Part (..), Info (..), info, Fossil (..), groupByFossil) where
 
 import Data.List.Extra
 import Labels
@@ -32,3 +32,6 @@ info :: Ident -> Label -> Info
 info i@(Ident ident) = Info i (Fossil $ intercalate "_" $ take 2 parts) (toPart $ concat $ take 1 $ drop 2 parts)
   where
     parts = split (`elem` "-_") $ dropPrefix "sp" $ lower ident
+
+groupByFossil :: [(Info, a)] -> [(Fossil, [(Info, a)])]
+groupByFossil res = groupSort [(infoFossil i, (i, s)) | (i, s) <- res]
