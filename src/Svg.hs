@@ -9,6 +9,7 @@ module Svg (
     isEllipse,
     readFileShapes,
     pathLength,
+    pathStartingFromPoint,
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
@@ -70,6 +71,12 @@ angleXY (XY x1 y1) (XY x2 y2) = if r < 0 then r + 360 else r
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
 pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
+
+-- | Given a point, reorientate the path so it starts closest to that end
+pathStartingFromPoint :: XY -> APath -> APath
+pathStartingFromPoint origin (APath xs)
+    | distanceXY (last xs) origin < distanceXY (head xs) origin = APath $ reverse xs
+    | otherwise = APath xs
 
 -- | The centre-point of an ellipse
 ellipseCentre :: AEllipse -> XY

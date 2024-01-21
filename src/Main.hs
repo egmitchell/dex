@@ -69,6 +69,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     ang = maybe 0 pathAngle . fossilPath fossil
       where
-        pathAngle (APath stemPath) = angleXY a b
+        pathAngle stemPath = angleXY a b
           where
-            (a : b : _) = if distanceXY (last stemPath) centre < distanceXY (head stemPath) centre then reverse stemPath else stemPath
+            APath (a : b : _) = pathStartingFromPoint centre stemPath
