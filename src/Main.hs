@@ -8,6 +8,7 @@ import Control.Monad
 import Csv
 import Data.Either.Extra
 import Data.List.Extra (zipFrom)
+import Data.Maybe
 import Fossil
 import Labels
 import Svg
@@ -40,10 +41,10 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "DiscCy" discCy
         ++ f "DistA" discA
         ++ f "StemL" (len StemL)
-        ++ angles "StemA" StemL
+        ++ angles "StemA" root StemL
         ++ f "StemW" (len StemW)
         ++ f "FrondL" (len FrondL)
-        ++ angles "FrondA" FrondL
+        ++ angles "FrondA" stemOrRoot FrondL
         ++ f "FrontW" (len FrondW)
         ++ f "Length1" (len Length1)
         ++ f "Length2" (len Length2)
@@ -51,9 +52,16 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "Width2" (len Width2)
         ++ f "Disc2Cx" disc2Cx
         ++ f "Disc2Cy" disc2Cy
-        ++ concat [f (show o) (len o) ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
-        ++ concat [f x (len o) ++ angles (x ++ "A") o | (o@(Other x), _) <- fosParts]
+        ++ concat [f (show o) (len o) ++ angles (show o ++ "A") (parent o) o | (o@Branch{}, _) <- fosParts]
+        ++ concat [f x (len o) ++ angles (x ++ "A") root o | (o@(Other x), _) <- fosParts]
   where
+    root = SEllipse $ snd $ fossilAnchor fossil
+    stemOrRoot = maybe root SPath $ fossilPath fossil StemL
+    parent (Branch lr n off)
+        | null off = SPath $ fromJust $ fossilPath fossil FrondL
+        | otherwise = SPath $ fromJust $ fossilPath fossil $ Branch lr n ""
+    parent _ = error "parent on not a branch"
+
     f name x = [(name, csv x)]
 
     (centre@(XY discX discY), (discCx, discCy), discA) = case fossilAnchor fossil of
@@ -67,6 +75,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     (disc2Cx, disc2Cy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
-    angles lbl typ = case fossilPath fossil typ of
+    angles lbl _relative typ = case fossilPath fossil typ of
         Nothing -> []
         Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ pathAngles $ pathStartingFromPoint centre path]
