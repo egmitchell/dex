@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Svg (
@@ -17,6 +19,7 @@ module Svg (
     ellipseAngle,
 ) where
 
+import Csv
 import Data.List.Extra
 import Data.Maybe
 import Graphics.Svg
@@ -25,9 +28,13 @@ import Linear.V2
 -- | An identifier (id) in an Svg file
 newtype Ident = Ident String deriving (Show)
 
-type X = Double
-type Y = Double
+newtype X = X Double deriving (Show, Csv)
+newtype Y = Y Double deriving (Show, Csv)
 data XY = XY X Y deriving (Show)
+
+{-# COMPLETE XY_ #-}
+pattern XY_ :: Double -> Double -> XY
+pattern XY_ x y = XY (X x) (Y y)
 
 data Shape
     = SPath APath
@@ -59,12 +66,12 @@ root ts x = case x of
     f at shp = [(Ident $ fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
 
 distanceXY :: XY -> XY -> Double
-distanceXY (XY x1 y1) (XY x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
+distanceXY (XY_ x1 y1) (XY_ x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
   where
     sqr x = x * x
 
 angleXY :: XY -> XY -> Double
-angleXY (XY x1 y1) (XY x2 y2) = if r < 0 then r + 360 else r
+angleXY (XY_ x1 y1) (XY_ x2 y2) = if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
@@ -94,21 +101,21 @@ ellipseCentre (AEllipse a _ _ _) = a
 
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)
-ellipseSize (AEllipse _ rx ry _) = (max rx ry * 2, min rx ry * 2)
+ellipseSize (AEllipse _ (X rx) (Y ry) _) = (max rx ry * 2, min rx ry * 2)
 
 -- | The angle of the ellipse, in degrees from north
 ellipseAngle :: AEllipse -> Double
-ellipseAngle (AEllipse (XY x y) _ _ (XY xa ya)) = reangle $ atan $ (xa - x) / (ya - y)
+ellipseAngle (AEllipse (XY_ x y) _ _ (XY_ xa ya)) = reangle $ atan $ (xa - x) / (ya - y)
   where
     reangle radians = if v < 0 then v + 180 else v
       where
         v = radians / pi * 180
 
 transformation :: Transformation -> XY -> XY
-transformation (TransformMatrix a b c d e f) (XY x y) = XY (a * x + c * y + e) (b * x + d * y + f)
-transformation (Translate e f) (XY x y) = XY (x + e) (y + f)
-transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (XY x y) =
-    XY
+transformation (TransformMatrix a b c d e f) (XY_ x y) = XY_ (a * x + c * y + e) (b * x + d * y + f)
+transformation (Translate e f) (XY_ x y) = XY_ (x + e) (y + f)
+transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (XY_ x y) =
+    XY_
         (cos angle * (x - ox) - sin angle * (y - oy) + ox)
         (sin angle * (x - ox) + cos angle * (y - oy) + oy)
   where
@@ -123,24 +130,24 @@ transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
 
 aPath :: Path -> APath
-aPath Path{_pathDefinition = xs} = APath $ f (XY 0 0) xs
+aPath Path{_pathDefinition = xs} = APath $ f (XY_ 0 0) xs
   where
-    f (XY x y) (p : ps) = case p of
+    f (XY_ x y) (p : ps) = case p of
         MoveTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
         LineTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
         CurveTo r ((_, _, V2 x y) : xys) -> go r x y $ CurveTo r xys : ps
-        LineTo _ [] -> f (XY x y) ps
-        CurveTo _ [] -> f (XY x y) ps
-        VerticalTo OriginRelative [y] -> f (XY x y) $ LineTo OriginRelative [V2 0 y] : ps
-        EndPath -> f (XY x y) ps
+        LineTo _ [] -> f (XY_ x y) ps
+        CurveTo _ [] -> f (XY_ x y) ps
+        VerticalTo OriginRelative [y] -> f (XY_ x y) $ LineTo OriginRelative [V2 0 y] : ps
+        EndPath -> f (XY_ x y) ps
         _ -> error $ "Unknown line segment: " ++ show p
       where
-        go OriginAbsolute x y rest = XY x y : f (XY x y) rest
-        go OriginRelative ((+ x) -> x) ((+ y) -> y) rest = XY x y : f (XY x y) rest
+        go OriginAbsolute x y rest = XY_ x y : f (XY_ x y) rest
+        go OriginRelative ((+ x) -> x) ((+ y) -> y) rest = XY_ x y : f (XY_ x y) rest
     f _ [] = []
 
 aEllipse :: Ellipse -> AEllipse
 aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
-    AEllipse (XY x y) rx ry $
-        if rx > ry then XY (x + rx) y else XY x (y + ry)
+    AEllipse (XY_ x y) (X rx) (Y ry) $
+        if rx > ry then XY_ (x + rx) y else XY_ x (y + ry)
 aEllipse x = error $ "Ellipse of the type not normally produced by Inkscape, " ++ take 100 (show x)
