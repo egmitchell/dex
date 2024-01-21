@@ -52,7 +52,7 @@ unroll extraParts (fossil, parts) =
       where
         v = radians / pi * 180
 
-    f x = case [pathLength ps | (i, SPath (APath ps)) <- parts, infoPart i == x] of
+    f x = case [pathLength ps | (i, SPath ps) <- parts, infoPart i == x] of
         [] -> 0
         [x] -> x
         xs -> err $ "Wrong number of " ++ show x ++ " for " ++ unFossil fossil ++ ", got " ++ show (length xs)

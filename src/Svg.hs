@@ -64,8 +64,9 @@ angleXY (XY x1 y1) (XY x2 y2) = if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
-pathLength :: [XY] -> Double
-pathLength xs = sum $ zipWith distanceXY (init xs) (tail xs)
+-- | The length of a path by summing up all the individual lengths on the path
+pathLength :: APath -> Double
+pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
 
 transformation :: Transformation -> XY -> XY
 transformation (TransformMatrix a b c d e f) (XY x y) = XY (a * x + c * y + e) (b * x + d * y + f)
