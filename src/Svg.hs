@@ -65,7 +65,7 @@ shapeFinalPoint (SEllipse x) = ellipseCentre x
 
 shapeFinalAngle :: Shape -> Angle
 shapeFinalAngle (SPath x) = pathFinalAngle x
-shapeFinalAngle _ = zeroAngle
+shapeFinalAngle _ = Angle 180
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do
@@ -104,7 +104,7 @@ anglesBetween xs = zipWith angleDiff xs (tail xs)
 angleDiff :: Angle -> Angle -> Angle
 angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
   where
-    r = b - a
+    r = 180 - a + b
 
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
