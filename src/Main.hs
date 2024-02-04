@@ -28,6 +28,7 @@ main = do
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         writeCsvFile (dropExtension file ++ "_dex.csv") good
+        putStrLn $ file ++ " resulted in " ++ show (length bad) ++ " error(s)"
 
 unroll :: Fossil -> [(String, CsvCell)]
 unroll fossil@Fossil{fosLabel = Label{..}, ..} =
