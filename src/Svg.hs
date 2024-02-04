@@ -19,7 +19,8 @@ module Svg (
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
-    shapeEnd,
+    shapeFinalAngle,
+    shapeFinalPoint,
     pathAlign,
 ) where
 
@@ -58,9 +59,13 @@ pathFromPoint :: XY -> APath
 pathFromPoint xy = APath [xy]
 
 -- | The end point of a shape
-shapeEnd :: Shape -> XY
-shapeEnd (SPath (APath xs)) = last xs
-shapeEnd (SEllipse x) = ellipseCentre x
+shapeFinalPoint :: Shape -> XY
+shapeFinalPoint (SPath (APath xs)) = last xs
+shapeFinalPoint (SEllipse x) = ellipseCentre x
+
+shapeFinalAngle :: Shape -> Angle
+shapeFinalAngle (SPath x) = pathFinalAngle x
+shapeFinalAngle _ = zeroAngle
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do

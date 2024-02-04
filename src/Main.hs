@@ -41,10 +41,10 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "DiscCy" discCy
         ++ f "DistA" discA
         ++ f "StemL" (len StemL)
-        ++ angles "StemA" root StemL
+        ++ angles "StemA" StemL
         ++ f "StemW" (len StemW)
         ++ f "FrondL" (len FrondL)
-        ++ angles "FrondA" stemOrRoot FrondL
+        ++ angles "FrondA" FrondL
         ++ f "FrontW" (len FrondW)
         ++ f "Length1" (len Length1)
         ++ f "Length2" (len Length2)
@@ -52,15 +52,9 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "Width2" (len Width2)
         ++ f "Disc2Cx" disc2Cx
         ++ f "Disc2Cy" disc2Cy
-        ++ concat [f (show o) (len o) ++ angles (show o ++ "A") (parent o) o | (o@Branch{}, _) <- fosParts]
-        ++ concat [f x (len o) ++ angles (x ++ "A") root o | (o@(Other x), _) <- fosParts]
+        ++ concat [f (show o) (len o) ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
+        ++ concat [f x (len o) ++ angles (x ++ "A") o | (o@(Other x), _) <- fosParts]
   where
-    root = pathFromPoint $ ellipseCentre $ snd $ fossilAnchor fossil
-    stemOrRoot = fromMaybe root $ fossilPath fossil StemL
-    parent (Branch lr n off)
-        | null off = fromJust $ fossilPath fossil FrondL
-        | otherwise = fromJust $ fossilPath fossil $ Branch lr n ""
-    parent _ = error "parent on not a branch"
 
     f name x = [(name, csv x)]
 
@@ -75,10 +69,10 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     (disc2Cx, disc2Cy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
-    angles lbl relative typ = case fossilPath fossil typ of
+    angles lbl typ = case fossilPath fossil typ of
         Nothing -> []
-        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ g $ pathsJoin relative path]
+        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ anglesBetween $ shapeFinalAngle parent : pathAngles path]
           where
-            g (before, x) = anglesBetween $ pathFinalAngle before : pathAngles x
+            parent = fromJust $ lookup (fromJust $ partParent fossil typ) fosParts
 
 
