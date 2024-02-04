@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Csv (Csv (..), CsvCell, writeCsvFile) where
+module Csv (Csv (..), CsvCell, unCsv, writeCsvFile) where
 
 import Control.DeepSeq
 import Data.Char
