@@ -24,7 +24,7 @@ main = do
         shapes <- readFileShapes file
 
         let res = groupFossils getLabel shapes
-        let ans = map (unroll . fossilAlign) res
+        let ans = map unroll res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         writeCsvFile (dropExtension file ++ "_dex.csv") good
