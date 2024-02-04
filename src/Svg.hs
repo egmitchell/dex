@@ -19,6 +19,8 @@ module Svg (
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
+    shapeEnd,
+    pathAlign,
 ) where
 
 import Csv
@@ -54,6 +56,11 @@ data AEllipse = AEllipse XY X Y XY deriving (Show)
 
 pathFromPoint :: XY -> APath
 pathFromPoint xy = APath [xy]
+
+-- | The end point of a shape
+shapeEnd :: Shape -> XY
+shapeEnd (SPath (APath xs)) = last xs
+shapeEnd (SEllipse x) = ellipseCentre x
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do
@@ -104,6 +111,12 @@ pathsJoin as bs = minimumOn f [(as, bs), (as, r bs), (r as, bs), (r as, r bs)]
   where
     r (APath xs) = APath $ reverse xs
     f (APath as, APath bs) = distanceXY (last as) (head bs)
+
+-- | Make sure the path starts as close to the point as we can
+pathAlign :: XY -> APath -> APath
+pathAlign start (APath xs)
+    | distanceXY start (head xs) <= distanceXY start (last xs) = APath xs
+    | otherwise = APath $ reverse xs
 
 pathFinalAngle :: APath -> Angle
 pathFinalAngle (APath xs) = case reverse xs of

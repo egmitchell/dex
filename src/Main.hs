@@ -24,7 +24,7 @@ main = do
         shapes <- readFileShapes file
 
         let res = groupFossils getLabel shapes
-        let ans = map unroll res
+        let ans = map (unroll . fossilAlign) res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         writeCsvFile (dropExtension file ++ "_dex.csv") good
@@ -80,3 +80,5 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ g $ pathsJoin relative path]
           where
             g (before, x) = anglesBetween $ pathFinalAngle before : pathAngles x
+
+
