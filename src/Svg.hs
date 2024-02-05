@@ -54,7 +54,10 @@ data Shape
 
 newtype APath = APath [Segment] deriving (Show)
 
-data Segment = Segment {segStart :: XY, segEnd :: XY} deriving (Show)
+data Segment
+    = Straight {segStart :: XY, segEnd :: XY}
+    | Curve {segStart :: XY, segEnd :: XY}
+    deriving (Show)
 
 data AEllipse = AEllipse {
     ellipseCentre :: XY,
@@ -97,13 +100,14 @@ shapeNearestTo xy (SEllipse e) = (distanceXY xy $ ellipseCentre e, Length 0, Ang
 shapeNearestTo xy (SPath (APath xs)) = minimumOn fst3 $ map (first3 $ distanceXY xy) $ fragment 0 xs
     where
         fragment :: Double -> [Segment] -> [(XY, Length, Angle)]
-        fragment len (Segment a@(XY_ ax ay) b@(XY_ bx by):xs) = steps ++ fragment (len + dist) xs
+        fragment len (Straight a@(XY_ ax ay) b@(XY_ bx by):xs) = steps ++ fragment (len + dist) xs
             where
                 steps = [(XY_ (ax + dx*s) (ay + dy*s), Length $ len + s, angle) |s <- 0 : [1..dist] ++ [dist]]
                 dist = distanceXY a b
                 angle = angleXY a b
                 dx = (bx - ax) / dist
                 dy = (by - ay) / dist
+        fragment len (Curve a b:xs) = fragment len (Straight a b:xs)
         fragment _ _ = []
 
 -- | The angle of the ellipse, in degrees from north
@@ -118,9 +122,13 @@ angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
   where
     r = 180 - a + b
 
+distanceSegment :: Segment -> Double
+distanceSegment (Straight a b) = distanceXY a b
+distanceSegment (Curve a b) = distanceXY a b
+
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
-pathLength (APath xs) = sum $ map (\(Segment a b) -> distanceXY a b) xs
+pathLength (APath xs) = sum $ map distanceSegment xs
 
 -- | Make sure the path starts as close to the shape
 pathAlign :: Shape -> APath -> APath
@@ -133,13 +141,15 @@ pathStart :: APath -> XY
 pathStart (APath xs) = segStart $ head xs
 
 pathFinalAngle :: APath -> Angle
-pathFinalAngle (APath xs) = case reverse xs of
-    Segment a b : _ -> angleXY b a
-    _ -> Angle 0
+pathFinalAngle (APath xs) = maybe zeroAngle (angleSegment . snd) $ unsnoc xs
+
+angleSegment :: Segment -> Angle
+angleSegment (Straight a b) = angleXY a b
+angleSegment (Curve a b) = angleXY a b
 
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Angle]
-pathAngles (APath xs) = map (\(Segment a b) -> angleXY a b) xs
+pathAngles (APath xs) = map angleSegment xs
 
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)
@@ -157,7 +167,10 @@ transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (XY_ x y) =
 transformation t _ = error $ "Unhandled transformation, " ++ show t
 
 applyXY :: (XY -> XY) -> Shape -> Shape
-applyXY f (SPath (APath xs)) = SPath $ APath $ map (\(Segment a b) -> Segment (f a) (f b)) xs
+applyXY f (SPath (APath xs)) = SPath $ APath $ map g xs
+    where
+        g (Straight a b) = Straight (f a) (f b)
+        g (Curve a b) = Curve (f a) (f b)
 applyXY f (SEllipse (AEllipse xy x y a)) = SEllipse $ AEllipse (f xy) x y (f a) -- leave the radius untouched
 
 transformations :: Shape -> [Transformation] -> Shape
@@ -172,10 +185,10 @@ aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
     f prev (p : ps) = case p of
         LineTo r [xy@(V2 x y)] -> case prev of
             Nothing -> f (Just $ XY_ x y) ps
-            Just prev -> let new = resolve r prev xy in Segment prev new : f (Just new) ps
+            Just prev -> let new = resolve r prev xy in Straight prev new : f (Just new) ps
         CurveTo r [(_, _, xy)] -> case prev of
             Nothing -> error "CurveTo without drawing anything"
-            Just prev -> let new = resolve r prev xy in Segment prev new : f (Just new) ps
+            Just prev -> let new = resolve r prev xy in Curve prev new : f (Just new) ps
 
         LineTo r (x:xs) -> f prev $ LineTo r [x] : LineTo r xs : ps
         LineTo _ [] -> f prev ps
