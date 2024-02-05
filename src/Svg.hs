@@ -54,7 +54,12 @@ data Shape
 
 newtype APath = APath [XY] deriving (Show)
 
-data AEllipse = AEllipse XY X Y XY deriving (Show)
+data AEllipse = AEllipse {
+    ellipseCentre :: XY,
+    ellipseRadiusX :: X,
+    ellipseRaidusY :: Y,
+    ellipseUnknown :: XY 
+    } deriving (Show)
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do
@@ -133,10 +138,6 @@ pathFinalAngle (APath xs) = case reverse xs of
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Angle]
 pathAngles (APath xs) = zipWith angleXY xs (tail xs)
-
--- | The centre-point of an ellipse
-ellipseCentre :: AEllipse -> XY
-ellipseCentre (AEllipse a _ _ _) = a
 
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)
