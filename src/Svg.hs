@@ -52,7 +52,9 @@ data Shape
     | SEllipse AEllipse
     deriving (Show)
 
-newtype APath = APath [XY] deriving (Show)
+newtype APath = APath [Segment] deriving (Show)
+
+data Segment = Segment {segStart :: XY, segEnd :: XY} deriving (Show)
 
 data AEllipse = AEllipse {
     ellipseCentre :: XY,
@@ -94,8 +96,8 @@ shapeNearestTo :: XY -> Shape -> (Double, Length, Angle)
 shapeNearestTo xy (SEllipse e) = (distanceXY xy $ ellipseCentre e, Length 0, Angle 180)
 shapeNearestTo xy (SPath (APath xs)) = minimumOn fst3 $ map (first3 $ distanceXY xy) $ fragment 0 xs
     where
-        fragment :: Double -> [XY] -> [(XY, Length, Angle)]
-        fragment len (a@(XY_ ax ay):b@(XY_ bx by):xs) = steps ++ fragment (len + dist) (b:xs)
+        fragment :: Double -> [Segment] -> [(XY, Length, Angle)]
+        fragment len (Segment a@(XY_ ax ay) b@(XY_ bx by):xs) = steps ++ fragment (len + dist) xs
             where
                 steps = [(XY_ (ax + dx*s) (ay + dy*s), Length $ len + s, angle) |s <- 0 : [1..dist] ++ [dist]]
                 dist = distanceXY a b
@@ -118,26 +120,26 @@ angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
 
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
-pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
+pathLength (APath xs) = sum $ map (\(Segment a b) -> distanceXY a b) xs
 
 -- | Make sure the path starts as close to the shape
 pathAlign :: Shape -> APath -> APath
 pathAlign parent (APath xs)
-    | f (head xs) <= f (last xs) = APath xs
+    | f (segStart $ head xs) <= f (segEnd $ last xs) = APath xs
     | otherwise = APath $ reverse xs
     where f x = fst3 $ shapeNearestTo x parent
 
 pathStart :: APath -> XY
-pathStart (APath xs) = head xs
+pathStart (APath xs) = segStart $ head xs
 
 pathFinalAngle :: APath -> Angle
 pathFinalAngle (APath xs) = case reverse xs of
-    a : b : _ -> angleXY b a
+    Segment a b : _ -> angleXY b a
     _ -> Angle 0
 
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Angle]
-pathAngles (APath xs) = zipWith angleXY xs (tail xs)
+pathAngles (APath xs) = map (\(Segment a b) -> angleXY a b) xs
 
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)
@@ -155,27 +157,29 @@ transformation (Rotate a (fromMaybe (0, 0) -> (ox, oy))) (XY_ x y) =
 transformation t _ = error $ "Unhandled transformation, " ++ show t
 
 applyXY :: (XY -> XY) -> Shape -> Shape
-applyXY f (SPath (APath xs)) = SPath $ APath $ map f xs
+applyXY f (SPath (APath xs)) = SPath $ APath $ map (\(Segment a b) -> Segment (f a) (f b)) xs
 applyXY f (SEllipse (AEllipse xy x y a)) = SEllipse $ AEllipse (f xy) x y (f a) -- leave the radius untouched
 
 transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
 
 aPath :: Path -> APath
-aPath Path{_pathDefinition = xs} = APath $ f (XY_ 0 0) xs
+aPath Path{_pathDefinition = xs} = APath $ zipWith Segment coords (tail coords)
   where
-    f (XY_ x y) (p : ps) = case p of
-        MoveTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
-        LineTo r (V2 x y : xys) -> go r x y $ LineTo r xys : ps
-        CurveTo r ((_, _, V2 x y) : xys) -> go r x y $ CurveTo r xys : ps
-        LineTo _ [] -> f (XY_ x y) ps
-        CurveTo _ [] -> f (XY_ x y) ps
-        VerticalTo OriginRelative [y] -> f (XY_ x y) $ LineTo OriginRelative [V2 0 y] : ps
-        EndPath -> f (XY_ x y) ps
+    coords = f (XY_ 0 0) xs
+
+    f prev@(XY_ prevx prevy) (p : ps) = case p of
+        MoveTo r (xy : xys) -> go r xy $ LineTo r xys : ps
+        LineTo r (xy : xys) -> go r xy $ LineTo r xys : ps
+        CurveTo r ((_, _, xy) : xys) -> go r xy $ CurveTo r xys : ps
+        LineTo _ [] -> f prev ps
+        CurveTo _ [] -> f prev ps
+        VerticalTo OriginRelative [y] -> f prev $ LineTo OriginRelative [V2 0 y] : ps
+        EndPath -> f prev ps
         _ -> error $ "Unknown line segment: " ++ show p
       where
-        go OriginAbsolute x y rest = XY_ x y : f (XY_ x y) rest
-        go OriginRelative ((+ x) -> x) ((+ y) -> y) rest = XY_ x y : f (XY_ x y) rest
+        go OriginAbsolute (V2 x y) rest = XY_ x y : f (XY_ x y) rest
+        go OriginRelative (V2 ((+ prevx) -> x) ((+ prevy) -> y)) rest = XY_ x y : f (XY_ x y) rest
     f _ [] = []
 
 aEllipse :: Ellipse -> AEllipse
