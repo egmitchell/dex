@@ -60,10 +60,11 @@ instance Show Part where
 toPart :: String -> Part
 toPart x = case x of
     _ | Just v <- lookup (lower x) builtin -> v
-    lr : 'B' : rest
-        | lr `elem` "LR"
+    lr : b : rest
+        | b `elem` "bB"
+        , lr `elem` "LRlr"
         , (a@(_ : _), b) <- span isDigit rest ->
-            Branch (if lr == 'L' then L else R) (read a) b
+            Branch (if lr `elem` "lL" then L else R) (read a) b
     _ -> Other x
   where
     builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Disc2, StemW, StemL, Length1, Length2, Width1, Width2]]
