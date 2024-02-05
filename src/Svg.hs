@@ -164,22 +164,27 @@ transformations :: Shape -> [Transformation] -> Shape
 transformations shp ts = applyXY (foldl (.) id $ map transformation $ reverse ts) shp
 
 aPath :: Path -> APath
-aPath Path{_pathDefinition = xs} = APath $ zipWith Segment coords (tail coords)
+aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
   where
-    coords = f (XY_ 0 0) xs
+    resolve OriginRelative (XY_ px py) (V2 x y) = XY_ (px+x) (py+y)
+    resolve OriginAbsolute _ (V2 x y) = XY_ x y
 
-    f prev@(XY_ prevx prevy) (p : ps) = case p of
-        MoveTo r (xy : xys) -> go r xy $ LineTo r xys : ps
-        LineTo r (xy : xys) -> go r xy $ LineTo r xys : ps
-        CurveTo r ((_, _, xy) : xys) -> go r xy $ CurveTo r xys : ps
+    f prev (p : ps) = case p of
+        LineTo r [xy@(V2 x y)] -> case prev of
+            Nothing -> f (Just $ XY_ x y) ps
+            Just prev -> let new = resolve r prev xy in Segment prev new : f (Just new) ps
+        CurveTo r [(_, _, xy)] -> case prev of
+            Nothing -> error "CurveTo without drawing anything"
+            Just prev -> let new = resolve r prev xy in Segment prev new : f (Just new) ps
+
+        LineTo r (x:xs) -> f prev $ LineTo r [x] : LineTo r xs : ps
         LineTo _ [] -> f prev ps
+        CurveTo r (x:xs) -> f prev $ CurveTo r [x] : CurveTo r xs : ps
         CurveTo _ [] -> f prev ps
+        MoveTo r xys -> f prev $ LineTo r xys : ps
         VerticalTo OriginRelative [y] -> f prev $ LineTo OriginRelative [V2 0 y] : ps
         EndPath -> f prev ps
         _ -> error $ "Unknown line segment: " ++ show p
-      where
-        go OriginAbsolute (V2 x y) rest = XY_ x y : f (XY_ x y) rest
-        go OriginRelative (V2 ((+ prevx) -> x) ((+ prevy) -> y)) rest = XY_ x y : f (XY_ x y) rest
     f _ [] = []
 
 aEllipse :: Ellipse -> AEllipse
