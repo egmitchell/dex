@@ -11,7 +11,6 @@ module Fossil (
     fossilPath,
     fossilEllipse,
     fossilAnchor,
-    fossilAlign,
     partParent,
 ) where
 

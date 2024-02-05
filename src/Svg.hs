@@ -10,9 +10,7 @@ module Svg (
     XY (..),
     zeroAngle,
     readFileShapes,
-    pathFromPoint,
     pathLength,
-    pathsJoin,
     pathFinalAngle,
     pathAngles,
     pathStart,
@@ -20,8 +18,6 @@ module Svg (
     ellipseCentre,
     ellipseSize,
     ellipseAngle,
-    shapeFinalAngle,
-    shapeFinalPoint,
     pathAlign,
     shapeNearestTo,
 ) where
@@ -59,18 +55,6 @@ data Shape
 newtype APath = APath [XY] deriving (Show)
 
 data AEllipse = AEllipse XY X Y XY deriving (Show)
-
-pathFromPoint :: XY -> APath
-pathFromPoint xy = APath [xy]
-
--- | The end point of a shape
-shapeFinalPoint :: Shape -> XY
-shapeFinalPoint (SPath (APath xs)) = last xs
-shapeFinalPoint (SEllipse x) = ellipseCentre x
-
-shapeFinalAngle :: Shape -> Angle
-shapeFinalAngle (SPath x) = pathFinalAngle x
-shapeFinalAngle _ = Angle 180
 
 readFileShapes :: FilePath -> IO [(Ident, Shape)]
 readFileShapes file = do
@@ -130,13 +114,6 @@ angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
 pathLength (APath xs) = sum $ zipWith distanceXY (init xs) (tail xs)
-
--- | If necessary, reverse the paths so they join up with each other (as close as you can get)
-pathsJoin :: APath -> APath -> (APath, APath)
-pathsJoin as bs = minimumOn f [(as, bs), (as, r bs), (r as, bs), (r as, r bs)]
-  where
-    r (APath xs) = APath $ reverse xs
-    f (APath as, APath bs) = distanceXY (last as) (head bs)
 
 -- | Make sure the path starts as close to the shape
 pathAlign :: Shape -> APath -> APath
