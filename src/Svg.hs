@@ -15,6 +15,7 @@ module Svg (
     pathsJoin,
     pathFinalAngle,
     pathAngles,
+    pathStart,
     anglesBetween,
     ellipseCentre,
     ellipseSize,
@@ -22,10 +23,12 @@ module Svg (
     shapeFinalAngle,
     shapeFinalPoint,
     pathAlign,
+    shapeNearestTo,
 ) where
 
 import Csv
 import Data.List.Extra
+import Data.Tuple.Extra
 import Data.Maybe
 import Graphics.Svg
 import Linear.V2
@@ -42,6 +45,8 @@ pattern XY_ :: Double -> Double -> XY
 pattern XY_ x y = XY (X x) (Y y)
 
 newtype Angle = Angle Double deriving (Show, Csv)
+
+newtype Length = Length Double deriving (Show, Csv)
 
 zeroAngle :: Angle
 zeroAngle = Angle 0
@@ -94,6 +99,22 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
+-- | Given a point and a shape, find the 
+
+shapeNearestTo :: XY -> Shape -> (Double, Length, Angle)
+shapeNearestTo xy (SEllipse e) = (distanceXY xy $ ellipseCentre e, Length 0, Angle 180)
+shapeNearestTo xy (SPath (APath xs)) = minimumOn fst3 $ map (first3 $ distanceXY xy) $ fragment 0 xs
+    where
+        fragment :: Double -> [XY] -> [(XY, Length, Angle)]
+        fragment len (a@(XY_ ax ay):b@(XY_ bx by):xs) = steps ++ fragment (len + dist) (b:xs)
+            where
+                steps = [(XY_ (ax + dx*s) (ay + dy*s), Length $ len + s, angle) |s <- 0 : [1..dist] ++ [dist]]
+                dist = distanceXY a b
+                angle = angleXY a b
+                dx = (bx - ax) / dist
+                dy = (by - ay) / dist
+        fragment _ _ = []
+
 -- | The angle of the ellipse, in degrees from north
 ellipseAngle :: AEllipse -> Angle
 ellipseAngle (AEllipse a _ _ b) = angleXY a b
@@ -117,11 +138,15 @@ pathsJoin as bs = minimumOn f [(as, bs), (as, r bs), (r as, bs), (r as, r bs)]
     r (APath xs) = APath $ reverse xs
     f (APath as, APath bs) = distanceXY (last as) (head bs)
 
--- | Make sure the path starts as close to the point as we can
-pathAlign :: XY -> APath -> APath
-pathAlign start (APath xs)
-    | distanceXY start (head xs) <= distanceXY start (last xs) = APath xs
+-- | Make sure the path starts as close to the shape
+pathAlign :: Shape -> APath -> APath
+pathAlign parent (APath xs)
+    | f (head xs) <= f (last xs) = APath xs
     | otherwise = APath $ reverse xs
+    where f x = fst3 $ shapeNearestTo x parent
+
+pathStart :: APath -> XY
+pathStart (APath xs) = head xs
 
 pathFinalAngle :: APath -> Angle
 pathFinalAngle (APath xs) = case reverse xs of

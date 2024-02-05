@@ -149,7 +149,7 @@ fossilAlign fos@Fossil{fosParts} = fos{fosParts = align [] $ partialOrder parent
         align done (x:xs) = align ((x, next) : done) xs
             where
                 next = case me of
-                    SPath a | Just up <- up -> SPath $ pathAlign (shapeFinalPoint up) a
+                    SPath a | Just up <- up -> SPath $ pathAlign up a
                     _ -> me
 
                 me = fromJust $ lookup x fosParts

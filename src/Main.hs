@@ -7,7 +7,8 @@ import Control.Exception.Extra
 import Control.Monad
 import Csv
 import Data.Either.Extra
-import Data.List.Extra (zipFrom)
+import Data.List.Extra
+import Data.Tuple.Extra
 import Data.Maybe
 import Fossil
 import Labels
@@ -54,7 +55,7 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "Width2" (len Width2)
         ++ f "Disc2Cx" disc2Cx
         ++ f "Disc2Cy" disc2Cy
-        ++ concat [f (show o) (len o) ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
+        ++ concat [f (show o) (len o) ++ distance (show o ++ "D") o ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
         ++ concat [f x (len o) ++ angles (x ++ "A") o | (o@(Other x), _) <- fosParts]
   where
 
@@ -73,8 +74,14 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angles lbl typ = case fossilPath fossil typ of
         Nothing -> []
-        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ anglesBetween $ shapeFinalAngle parent : pathAngles path]
+        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ anglesBetween $
+            thd3 (shapeNearestTo (pathStart path) parent) : pathAngles path]
           where
             parent = fromJust $ lookup (fromJust $ partParent fossil typ) fosParts
 
-
+    -- how far does this element start down its parent
+    distance lbl typ = case fossilPath fossil typ of
+        Nothing -> []
+        Just path -> f lbl $ snd3 $ shapeNearestTo (pathStart path) parent
+          where
+            parent = fromJust $ lookup (fromJust $ partParent fossil typ) fosParts
