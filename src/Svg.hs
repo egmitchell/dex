@@ -214,11 +214,17 @@ aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCen
 aEllipse x = error $ "Ellipse of the type not normally produced by Inkscape, " ++ take 100 (show x)
 
 aEllipseArc :: Path -> AEllipse
-aEllipseArc Path{_pathDefinition=[MoveTo OriginAbsolute [_],
-    EllipticalArc OriginAbsolute steps]}
-    | length steps == 4
+aEllipseArc Path{_pathDefinition=[MoveTo _ [V2 x0 y0],
+    EllipticalArc r steps]}
+    | steps <- if r == OriginRelative then absolute x0 y0 steps else steps
+    , length steps == 4
     , [(rx, ry)] <- nubOrd [(rx,ry) | (rx,ry,_,_,_,_) <- steps]
     , let (xs,ys) = unzip [(x, y) | (_,_,_,_,_,V2 x y) <- steps]
     = aEllipseHelper (XY_ (mean xs) (mean ys)) (X rx) (Y ry)
-    where mean xs = sum xs / genericLength xs
+    where
+        mean xs = sum xs / genericLength xs
+        absolute _ _ [] = []
+        absolute x y ((a,b,c,d,e,V2 x2 y2):rest) =
+            (a,b,c,d,e,V2 (x+x2) (y+y2)) :
+            absolute (x+x2) (y+y2) rest
 aEllipseArc x = error $ "Ellipse of the type not normally produced by Inkscape, " ++ take 100 (show x)
