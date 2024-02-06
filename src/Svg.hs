@@ -198,6 +198,7 @@ aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
         CurveTo _ [] -> f prev ps
         MoveTo r xys -> f prev $ LineTo r xys : ps
         VerticalTo OriginRelative [y] -> f prev $ LineTo OriginRelative [V2 0 y] : ps
+        VerticalTo OriginAbsolute [y] -> f prev $ LineTo OriginAbsolute [V2 (maybe 0 (\(XY_ x _) -> x) prev) y] : ps
         EndPath -> f prev ps
         _ -> error $ "Unknown line segment: " ++ show p
     f _ [] = []
