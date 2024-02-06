@@ -78,6 +78,8 @@ root ts x = case x of
     GroupTree x -> concatMap (root $ fromMaybe [] (_transform $ _groupDrawAttributes x) ++ ts) $ _groupChildren x
     CircleTree (Circle a b c) -> root ts $ EllipseTree $ Ellipse a b c c
     EllipseTree x -> f (_ellipseDrawAttributes x) $ SEllipse $ aEllipse x
+    PathTree x@Path{_pathDefinition=[MoveTo{}, EllipticalArc{}]} ->
+        f (_pathDrawAttributes x) $ SEllipse $ aEllipseArc x
     PathTree x -> f (_pathDrawAttributes x) $ SPath $ aPath x
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
@@ -200,8 +202,22 @@ aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
         _ -> error $ "Unknown line segment: " ++ show p
     f _ [] = []
 
-aEllipse :: Ellipse -> AEllipse
-aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
+aEllipseHelper :: XY -> X -> Y -> AEllipse
+aEllipseHelper (XY_ x y) (X rx) (Y ry) =
     AEllipse (XY_ x y) (X rx) (Y ry) $
         if rx > ry then XY_ (x + rx) y else XY_ x (y + ry)
+
+aEllipse :: Ellipse -> AEllipse
+aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
+    aEllipseHelper (XY_ x y) (X rx) (Y ry)
 aEllipse x = error $ "Ellipse of the type not normally produced by Inkscape, " ++ take 100 (show x)
+
+aEllipseArc :: Path -> AEllipse
+aEllipseArc Path{_pathDefinition=[MoveTo OriginAbsolute [_],
+    EllipticalArc OriginAbsolute steps]}
+    | length steps == 4
+    , [(rx, ry)] <- nubOrd [(rx,ry) | (rx,ry,_,_,_,_) <- steps]
+    , let (xs,ys) = unzip [(x, y) | (_,_,_,_,_,V2 x y) <- steps]
+    = aEllipseHelper (XY_ (mean xs) (mean ys)) (X rx) (Y ry)
+    where mean xs = sum xs / genericLength xs
+aEllipseArc x = error $ "Ellipse of the type not normally produced by Inkscape, " ++ take 100 (show x)
