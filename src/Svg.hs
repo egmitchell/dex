@@ -135,7 +135,8 @@ angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
 
 distanceSegment :: Segment -> Double
 distanceSegment (Straight a b) = distanceXY a b
-distanceSegment (Curve a _ _ b) = distanceXY a b
+distanceSegment curve = sum $ zipWith distanceXY pts (tail pts)
+    where pts = map (`pointAt` curve) $ fractions 20
 
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
