@@ -153,7 +153,8 @@ pathStart (APath xs) = segStart $ head xs
 
 angleSegment :: Segment -> Angle
 angleSegment (Straight a b) = angleXY a b
-angleSegment (Curve a _ _ b) = angleXY a b
+angleSegment c@(Curve a _ _ _) = angleXY a b
+    where b = pointAt (1/8) c
 
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Angle]
