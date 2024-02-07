@@ -11,7 +11,6 @@ module Svg (
     zeroAngle,
     readFileShapes,
     pathLength,
-    pathFinalAngle,
     pathAngles,
     pathStart,
     anglesBetween,
@@ -151,9 +150,6 @@ pathAlign parent (APath xs)
 
 pathStart :: APath -> XY
 pathStart (APath xs) = segStart $ head xs
-
-pathFinalAngle :: APath -> Angle
-pathFinalAngle (APath xs) = maybe zeroAngle (angleSegment . snd) $ unsnoc xs
 
 angleSegment :: Segment -> Angle
 angleSegment (Straight a b) = angleXY a b
