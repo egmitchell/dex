@@ -104,7 +104,9 @@ pointAt t (Curve p0 p1 p2 p3) = XY_ (f (\(XY_ x _) -> x)) (f (\(XY_ _ y) -> y))
         f p = (1-t)**3 * (p p0) + t*(p p1)*(3*(1-t)**2) + (p p2)*(3*(1-t)*t**2) + (p p3)*t**3
 
 
-
+-- | Produce fractions from 0..1, must include 0 and 1
+fractions :: Int -> [Double]
+fractions n = map (\i -> intToDouble i / intToDouble (n - 1)) [0..n-1]
 
 -- | Given a point and a shape, find the 
 shapeNearestTo :: XY -> Shape -> (Double, Length, Angle)
@@ -114,7 +116,7 @@ shapeNearestTo xy (SPath (APath xs)) = minimumOn fst3 $ map (first3 $ distanceXY
         fragment :: Double -> [Segment] -> [(XY, Length, Angle)]
         fragment len (seg:xs) = steps ++ fragment (len + dist) xs
             where
-                steps = [(pointAt i seg, Length $ len + (dist * i), angle) | i <- map (\i -> intToDouble i / 100) [0..100]]
+                steps = [(pointAt i seg, Length $ len + (dist * i), angle) | i <- fractions 100]
                 dist = distanceSegment seg
                 angle = angleSegment seg
         fragment _ _ = []
