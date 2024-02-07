@@ -97,9 +97,11 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
 pointAt :: Double -> Segment -> XY
-pointAt i (Straight (XY_ ax ay) (XY_ bx by)) = XY_ (ax + (bx - ax) * i) (ay + (by - ay) * i)
-pointAt i (Curve a _ _ b) = pointAt i $ Straight a b
--- P = (1-t)**3 * P0 + t*P1*(3*(1-t)**2) + P2*(3*(1-t)*t**2) + P3*t**3
+pointAt t (Straight (XY_ ax ay) (XY_ bx by)) = XY_ (ax + (bx - ax) * t) (ay + (by - ay) * t)
+pointAt t (Curve p0 p1 p2 p3) = XY_ (f (\(XY_ x _) -> x)) (f (\(XY_ _ y) -> y))
+    where
+        -- from https://blog.maximeheckel.com/posts/cubic-bezier-from-math-to-motion/
+        f p = (1-t)**3 * (p p0) + t*(p p1)*(3*(1-t)**2) + (p p2)*(3*(1-t)*t**2) + (p p3)*t**3
 
 
 
