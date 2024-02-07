@@ -25,6 +25,7 @@ module Svg (
 import Csv
 import Data.List.Extra
 import Data.Tuple.Extra
+import Numeric.Extra
 import Data.Maybe
 import Graphics.Svg
 import Linear.V2
@@ -95,21 +96,25 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
--- | Given a point and a shape, find the 
+pointAt :: Double -> Segment -> XY
+pointAt i (Straight (XY_ ax ay) (XY_ bx by)) = XY_ (ax + (bx - ax) * i) (ay + (by - ay) * i)
+pointAt i (Curve a b) = pointAt i $ Straight a b
+-- P = (1-t)**3 * P0 + t*P1*(3*(1-t)**2) + P2*(3*(1-t)*t**2) + P3*t**3
 
+
+
+
+-- | Given a point and a shape, find the 
 shapeNearestTo :: XY -> Shape -> (Double, Length, Angle)
 shapeNearestTo xy (SEllipse e) = (distanceXY xy $ ellipseCentre e, Length 0, Angle 180)
 shapeNearestTo xy (SPath (APath xs)) = minimumOn fst3 $ map (first3 $ distanceXY xy) $ fragment 0 xs
     where
         fragment :: Double -> [Segment] -> [(XY, Length, Angle)]
-        fragment len (Straight a@(XY_ ax ay) b@(XY_ bx by):xs) = steps ++ fragment (len + dist) xs
+        fragment len (seg:xs) = steps ++ fragment (len + dist) xs
             where
-                steps = [(XY_ (ax + dx*s) (ay + dy*s), Length $ len + s, angle) |s <- 0 : [1..dist] ++ [dist]]
-                dist = distanceXY a b
-                angle = angleXY a b
-                dx = (bx - ax) / dist
-                dy = (by - ay) / dist
-        fragment len (Curve a b:xs) = fragment len (Straight a b:xs)
+                steps = [(pointAt i seg, Length $ len + (dist * i), angle) | i <- map (\i -> intToDouble i / 100) [0..100]]
+                dist = distanceSegment seg
+                angle = angleSegment seg
         fragment _ _ = []
 
 -- | The angle of the ellipse, in degrees from north
