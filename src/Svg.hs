@@ -57,7 +57,7 @@ newtype APath = APath [Segment] deriving (Show)
 
 data Segment
     = Straight {segStart :: XY, segEnd :: XY}
-    | Curve {segStart :: XY, segEnd :: XY}
+    | Curve {segStart :: XY, controlBegin :: XY, controlEnd :: XY, segEnd :: XY}
     deriving (Show)
 
 data AEllipse = AEllipse {
@@ -98,7 +98,7 @@ angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
 
 pointAt :: Double -> Segment -> XY
 pointAt i (Straight (XY_ ax ay) (XY_ bx by)) = XY_ (ax + (bx - ax) * i) (ay + (by - ay) * i)
-pointAt i (Curve a b) = pointAt i $ Straight a b
+pointAt i (Curve a _ _ b) = pointAt i $ Straight a b
 -- P = (1-t)**3 * P0 + t*P1*(3*(1-t)**2) + P2*(3*(1-t)*t**2) + P3*t**3
 
 
@@ -131,7 +131,7 @@ angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
 
 distanceSegment :: Segment -> Double
 distanceSegment (Straight a b) = distanceXY a b
-distanceSegment (Curve a b) = distanceXY a b
+distanceSegment (Curve a _ _ b) = distanceXY a b
 
 -- | The length of a path by summing up all the individual lengths on the path
 pathLength :: APath -> Double
@@ -152,7 +152,7 @@ pathFinalAngle (APath xs) = maybe zeroAngle (angleSegment . snd) $ unsnoc xs
 
 angleSegment :: Segment -> Angle
 angleSegment (Straight a b) = angleXY a b
-angleSegment (Curve a b) = angleXY a b
+angleSegment (Curve a _ _ b) = angleXY a b
 
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Angle]
@@ -177,7 +177,7 @@ applyXY :: (XY -> XY) -> Shape -> Shape
 applyXY f (SPath (APath xs)) = SPath $ APath $ map g xs
     where
         g (Straight a b) = Straight (f a) (f b)
-        g (Curve a b) = Curve (f a) (f b)
+        g (Curve a b c d) = Curve (f a) (f b) (f c) (f d)
 applyXY f (SEllipse (AEllipse xy x y a)) = SEllipse $ AEllipse (f xy) x y (f a) -- leave the radius untouched
 
 transformations :: Shape -> [Transformation] -> Shape
@@ -193,9 +193,9 @@ aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
         LineTo r [xy@(V2 x y)] -> case prev of
             Nothing -> f (Just $ XY_ x y) ps
             Just prev -> let new = resolve r prev xy in Straight prev new : f (Just new) ps
-        CurveTo r [(_, _, xy)] -> case prev of
+        CurveTo r [(pb, pe, xy)] -> case prev of
             Nothing -> error "CurveTo without drawing anything"
-            Just prev -> let new = resolve r prev xy in Curve prev new : f (Just new) ps
+            Just prev -> let new = resolve r prev xy in Curve prev (resolve r prev pb) (resolve r prev pe) new : f (Just new) ps
 
         LineTo r (x:xs) -> f prev $ LineTo r [x] : LineTo r xs : ps
         LineTo _ [] -> f prev ps
