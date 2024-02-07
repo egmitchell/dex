@@ -23,6 +23,7 @@ module Svg (
 
 import Csv
 import Data.List.Extra
+import Data.Ord
 import Data.Tuple.Extra
 import Numeric.Extra
 import Data.Maybe
@@ -102,6 +103,14 @@ pointAt t (Curve p0 p1 p2 p3) = XY_ (f (\(XY_ x _) -> x)) (f (\(XY_ _ y) -> y))
         -- from https://blog.maximeheckel.com/posts/cubic-bezier-from-math-to-motion/
         f p = (1-t)**3 * (p p0) + t*(p p1)*(3*(1-t)**2) + (p p2)*(3*(1-t)*t**2) + (p p3)*t**3
 
+-- | We want at least 1/8th of the line to be involved, but don't want to make up points.
+angleAt :: Double -> Segment -> Angle
+angleAt _ (Straight a b) = angleXY a b
+-- I expected this to be t2-bump `angleXY` t2+bump, but that experimentally is wrong?
+angleAt t seg = angleXY (pointAt (t2 + bump) seg) (pointAt (t2 - bump) seg)
+    where
+        bump = 1/16
+        t2 = clamp (bump, 1 - bump) t
 
 -- | Produce fractions from 0..1, must include 0 and 1
 fractions :: Int -> [Double]
@@ -115,9 +124,8 @@ shapeNearestTo xy (SPath (APath xs)) = minimumOn fst3 $ map (first3 $ distanceXY
         fragment :: Double -> [Segment] -> [(XY, Length, Angle)]
         fragment len (seg:xs) = steps ++ fragment (len + dist) xs
             where
-                steps = [(pointAt i seg, Length $ len + (dist * i), angle) | i <- fractions 100]
+                steps = [(pointAt i seg, Length $ len + (dist * i), angleAt i seg) | i <- fractions 100]
                 dist = distanceSegment seg
-                angle = angleSegment seg
         fragment _ _ = []
 
 -- | The angle of the ellipse, in degrees from north
