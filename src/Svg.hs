@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Svg (
     Ident (..),
@@ -151,13 +152,23 @@ pathLength (APath xs) = sum $ map distanceSegment xs
 
 -- | Make sure the path starts as close to the shape
 pathAlign :: Shape -> APath -> APath
-pathAlign parent (APath xs)
-    | f (segStart $ head xs) <= f (segEnd $ last xs) = APath xs
-    | otherwise = APath $ reverse xs
+pathAlign parent p
+    | f (pathStart p) <= f (pathEnd p) = p
+    | otherwise = pathReverse p
     where f x = fst3 $ shapeNearestTo x parent
 
 pathStart :: APath -> XY
 pathStart (APath xs) = segStart $ head xs
+
+pathEnd :: APath -> XY
+pathEnd (APath xs) = segEnd $ last xs
+
+pathReverse :: APath -> APath
+pathReverse (APath xs) = APath $ reverse $ map reverseSegment xs
+
+reverseSegment :: Segment -> Segment
+reverseSegment Straight{..} = Straight segEnd segStart
+reverseSegment Curve{..} = Curve segEnd controlEnd controlBegin segStart
 
 angleSegment :: Segment -> Angle
 angleSegment (Straight a b) = angleXY a b
