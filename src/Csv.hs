@@ -9,7 +9,7 @@ import Data.List.Extra
 import Data.Maybe
 
 newtype CsvCell = CsvCell {unCsv :: String}
-    deriving (NFData)
+    deriving (NFData, Show)
 
 writeCsvFile :: FilePath -> [[(String, CsvCell)]] -> IO ()
 writeCsvFile file xss = writeFile file $ unlines $ map (intercalate "," . map unCsv) $ map csv titles : map row xss
