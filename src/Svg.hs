@@ -13,6 +13,7 @@ module Svg (
     readFileShapes,
     pathLength,
     pathAngles,
+    pathPoints,
     pathStart,
     anglesBetween,
     ellipseCentre,
@@ -178,6 +179,9 @@ angleSegment c@(Curve a _ _ _) = angleXY a b
 -- | Find each successive angle in a path
 pathAngles :: APath -> [Angle]
 pathAngles (APath xs) = map angleSegment xs
+
+pathPoints :: APath -> [XY]
+pathPoints (APath xs) = segStart (head xs) : map segEnd xs
 
 -- | The size of an ellipse. The larger of the two will always be returned first
 ellipseSize :: AEllipse -> (Double, Double)

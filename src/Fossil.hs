@@ -12,6 +12,7 @@ module Fossil (
     fossilEllipse,
     fossilAnchor,
     partParent,
+    showEdgeCsv,
 ) where
 
 import Data.Char
@@ -19,6 +20,7 @@ import Data.List.Extra
 import Data.Maybe
 import Labels
 import Svg
+import Csv
 
 data LR = L | R deriving (Show, Eq, Ord)
 
@@ -79,15 +81,28 @@ data Fossil = Fossil
     }
     deriving (Show)
 
+data Edge = Edge [XY]
+
+showEdgeCsv :: Edge -> String
+showEdgeCsv (Edge xs) = unlines $ "X,Y" :
+    [unCsv (csv x) ++ "," ++ unCsv (csv y) | XY x y <- xs]
+
 -- | Given the identifier and its label, create the info.
 info :: Ident -> (String, Part)
 info (Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
     [surface, specimen, part] -> (surface ++ "_" ++ specimen, toPart part)
     _ -> errorWithoutStackTrace $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 
-groupFossils :: (Ident -> Label) -> [(Ident, Shape)] -> [Fossil]
-groupFossils getLabel shapes = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- shapes, let (fossil, part) = info ident]
+mkEdge :: Shape -> Edge
+mkEdge (SPath x) = Edge $ pathPoints x
+mkEdge _ = error "Edge must be a path, got something else"
+
+groupFossils :: (Ident -> Label) -> [(Ident, Shape)] -> (Maybe Edge, [Fossil])
+groupFossils getLabel shapes = (fmap (mkEdge . snd) $ listToMaybe edge, fossils)
   where
+    (edge, other) = partition (\(Ident x, _) -> x == "edge") shapes
+    fossils = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- other, let (fossil, part) = info ident]
+
     f :: (String, [(Part, (Ident, Shape))]) -> Fossil
     f (fossil, parts)
         | dupes@(_ : _) <- duplicates $ map fst parts = errorFossil fossil $ "has duplicate parts for " ++ show dupes

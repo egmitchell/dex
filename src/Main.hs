@@ -4,7 +4,7 @@ module Main (main) where
 
 import Control.DeepSeq
 import Control.Exception.Extra
-import Control.Monad
+import Control.Monad.Extra
 import Csv
 import Data.Either.Extra
 import Data.List.Extra
@@ -24,12 +24,14 @@ main = do
         getLabel <- readFileLabels file
         shapes <- readFileShapes file
 
-        let res = groupFossils getLabel shapes
+        let (edge, res) = groupFossils getLabel shapes
         let ans = map unroll res
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         writeCsvFile (dropExtension file ++ "_dex.csv") good
         writeFile (dropExtension file ++ "_raw.txt") $ unlines [a ++ "\t" ++ unCsv b | (a,b) <- concat good]
+        whenJust edge $ \edge ->
+            writeFile (dropExtension file ++ "_edge.csv") $ showEdgeCsv edge
         putStrLn $ file ++ " resulted in " ++ show (length bad) ++ " error(s)"
 
 unroll :: Fossil -> [(String, CsvCell)]
