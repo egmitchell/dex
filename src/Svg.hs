@@ -232,6 +232,10 @@ aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
         HorizontalTo OriginRelative [x] -> f prev $ LineTo OriginRelative [V2 x 0] : ps
         HorizontalTo OriginAbsolute [x] -> f prev $ LineTo OriginAbsolute [V2 x (maybe 0 (\(XY_ _ y) -> y) prev)] : ps
         EndPath -> f prev ps
+
+        -- Throw away EllipticalArc information
+        EllipticalArc r xs -> f prev (MoveTo r [x | (_, _, _, _, _, x) <- xs] : ps)
+
         _ -> error $ "Unknown line segment: " ++ show p
     f _ [] = []
 
