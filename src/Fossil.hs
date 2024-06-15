@@ -18,6 +18,7 @@ module Fossil (
 import Data.Char
 import Data.List.Extra
 import Data.Maybe
+import Data.Either
 import Labels
 import Svg
 import Csv
@@ -88,10 +89,10 @@ showEdgeCsv (Edge xs) = unlines $ "X,Y" :
     [unCsv (csv x) ++ "," ++ unCsv (csv y) | XY x y <- xs]
 
 -- | Given the identifier and its label, create the info.
-info :: Ident -> (String, Part)
+info :: Ident -> Either String (String, Part)
 info (Ident ident) = case split (`elem` "-_") $ dropPrefix "sp" $ lower ident of
-    [surface, specimen, part] -> (surface ++ "_" ++ specimen, toPart part)
-    _ -> errorWithoutStackTrace $ "Identifier must have exactly 3 _ separated components, got " ++ ident
+    [surface, specimen, part] -> Right (surface ++ "_" ++ specimen, toPart part)
+    _ -> Left $ "Identifier must have exactly 3 _ separated components, got " ++ ident
 
 mkEdge :: Shape -> Edge
 mkEdge (SPath x) = Edge $ pathPoints x
@@ -101,7 +102,8 @@ groupFossils :: (Ident -> Label) -> [(Ident, Shape)] -> (Maybe Edge, [Fossil])
 groupFossils getLabel shapes = (fmap (mkEdge . snd) $ listToMaybe edge, fossils)
   where
     (edge, other) = partition (\(Ident x, _) -> x == "edge") shapes
-    fossils = map f $ groupSort [(fossil, (part, (ident, shape))) | (ident, shape) <- other, let (fossil, part) = info ident]
+    (failure, success) = partitionEithers [do (fossil, part) <- info ident; Right (fossil, (part, (ident, shape))) | (ident, shape) <- other]
+    fossils = map f (groupSort success) ++ map errorWithoutStackTrace failure
 
     f :: (String, [(Part, (Ident, Shape))]) -> Fossil
     f (fossil, parts)
