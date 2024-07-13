@@ -84,6 +84,8 @@ root ts x = case x of
     PathTree x@Path{_pathDefinition=[MoveTo{}, EllipticalArc{}]} ->
         f (_pathDrawAttributes x) $ SEllipse $ aEllipseArc x
     PathTree x -> f (_pathDrawAttributes x) $ SPath $ aPath x
+    -- assume these are circles with a corner radius to circle them out
+    RectangleTree x -> f (_rectDrawAttributes x) $ SEllipse $ aRect x
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
     f at shp = [(Ident $ fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
@@ -243,6 +245,11 @@ aEllipseHelper :: XY -> X -> Y -> AEllipse
 aEllipseHelper (XY_ x y) (X rx) (Y ry) =
     AEllipse (XY_ x y) (X rx) (Y ry) $
         if rx > ry then XY_ (x + rx) y else XY_ x (y + ry)
+
+aRect :: Rectangle -> AEllipse
+aRect Rectangle{_rectUpperLeftCorner = (Num x, Num y), _rectWidth = Num w, _rectHeight = Num h} = aEllipseHelper (XY (X $ x+rx) (Y $ y+ry)) (X rx) (Y ry)
+    where (rx, ry) = (w / 2, h / 2)
+aRect x = error $ "Rectnagle of the type not normally produced by Inkscape, " ++ take 100 (show x)
 
 aEllipse :: Ellipse -> AEllipse
 aEllipse Ellipse{_ellipseXRadius = Num rx, _ellipseYRadius = Num ry, _ellipseCenter = (Num x, Num y)} =
