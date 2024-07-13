@@ -223,11 +223,21 @@ aPath Path{_pathDefinition = xs} = APath $ f Nothing xs
         CurveTo r [(pb, pe, xy)] -> case prev of
             Nothing -> error "CurveTo without drawing anything"
             Just prev -> let new = resolve r prev xy in Curve prev (resolve r prev pb) (resolve r prev pe) new : f (Just new) ps
+        QuadraticBezier r [(p, xy)] -> case prev of
+            Nothing -> error "QuadraticBezier without drawing anything"
+            Just prev ->
+                let new = resolve r prev xy
+                    mid = resolve r prev p
+                    -- https://stackoverflow.com/questions/3162645/convert-a-quadratic-bezier-to-a-cubic-one
+                    g (XY (X ax) (Y ay)) (XY (X bx) (Y by)) = XY (X $ bx + 2/3 * (ax-bx)) (Y $ by + 2/3 * (ay-bx))
+                in Curve prev (g mid prev) (g mid new) new : f (Just new) ps
 
         LineTo r (x:xs) -> f prev $ LineTo r [x] : LineTo r xs : ps
         LineTo _ [] -> f prev ps
         CurveTo r (x:xs) -> f prev $ CurveTo r [x] : CurveTo r xs : ps
         CurveTo _ [] -> f prev ps
+        QuadraticBezier r (x:xs) -> f prev $ QuadraticBezier r [x] : QuadraticBezier r xs : ps
+        QuadraticBezier _ [] -> f prev ps
         MoveTo r xys -> f prev $ LineTo r xys : ps
         VerticalTo OriginRelative [y] -> f prev $ LineTo OriginRelative [V2 0 y] : ps
         VerticalTo OriginAbsolute [y] -> f prev $ LineTo OriginAbsolute [V2 (maybe 0 (\(XY_ x _) -> x) prev) y] : ps
