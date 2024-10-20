@@ -45,6 +45,12 @@ pattern XY_ x y = XY (X x) (Y y)
 
 newtype Angle = Angle Double deriving (Show, Csv)
 
+mkAngle :: Double -> Angle
+mkAngle x
+    | x < 0 = Angle $ x + 360
+    | x >= 360 = Angle $ x - 360
+    | otherwise = Angle $ x
+
 newtype Length = Length Double deriving (Show, Csv)
 
 zeroAngle :: Angle
@@ -96,7 +102,7 @@ distanceXY (XY_ x1 y1) (XY_ x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
     sqr x = x * x
 
 angleXY :: XY -> XY -> Angle
-angleXY (XY_ x1 y1) (XY_ x2 y2) = Angle $ if r < 0 then r + 360 else r
+angleXY (XY_ x1 y1) (XY_ x2 y2) = mkAngle r
   where
     r = atan2 (x2 - x1) (y2 - y1) * 180 / pi
 
@@ -140,7 +146,7 @@ anglesBetween :: [Angle] -> [Angle]
 anglesBetween xs = zipWith angleDiff xs (tail xs)
 
 angleDiff :: Angle -> Angle -> Angle
-angleDiff (Angle a) (Angle b) = Angle $ if r < 0 then r + 360 else r
+angleDiff (Angle a) (Angle b) = mkAngle r
   where
     r = 180 - a + b
 
