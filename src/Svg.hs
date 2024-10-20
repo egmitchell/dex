@@ -146,9 +146,8 @@ anglesBetween :: [Angle] -> [Angle]
 anglesBetween xs = zipWith angleDiff xs (tail xs)
 
 angleDiff :: Angle -> Angle -> Angle
-angleDiff (Angle a) (Angle b) = mkAngle r
-  where
-    r = 180 - a + b
+angleDiff (Angle a) (Angle b) = mkAngle $ if x > 180 then x - 180 else x
+    where Angle x = mkAngle $ 180 - a + b
 
 distanceSegment :: Segment -> Double
 distanceSegment (Straight a b) = distanceXY a b
