@@ -91,8 +91,10 @@ root ts x = case x of
     PathTree x@Path{_pathDefinition = [MoveTo{}, EllipticalArc{}]} ->
         f (_pathDrawAttributes x) $ SEllipse $ aEllipseArc x
     PathTree x -> f (_pathDrawAttributes x) $ SPath $ aPath x
-    -- assume these are circles with a corner radius to circle them out
-    RectangleTree x -> f (_rectDrawAttributes x) $ SEllipse $ aRect x
+    -- assume these are circles with a corner radius to circle them out, unless they start with `rect`
+    RectangleTree x
+        | Just lbl <- _attrId (_rectDrawAttributes x), "rect" `isPrefixOf` lbl -> []
+        | otherwise -> f (_rectDrawAttributes x) $ SEllipse $ aRect x
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
     f at shp = [(Ident $ fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
