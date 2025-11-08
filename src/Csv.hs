@@ -27,3 +27,7 @@ instance Csv String where
 
 instance Csv Double where
     csv = CsvCell . show
+
+instance (Csv a) => Csv (Maybe a) where
+    csv Nothing = CsvCell ""
+    csv (Just x) = csv x
