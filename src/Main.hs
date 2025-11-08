@@ -8,8 +8,8 @@ import Control.Monad.Extra
 import Csv
 import Data.Either.Extra
 import Data.List.Extra
-import Data.Tuple.Extra
 import Data.Maybe
+import Data.Tuple.Extra
 import Fossil
 import Labels
 import Svg
@@ -29,7 +29,7 @@ main = do
         (bad, good) <- fmap partitionEithers $ forM ans $ try_ . evaluate . force
         writeFile (dropExtension file ++ "_dex_ignored.txt") $ unlines $ map show bad
         writeCsvFile (dropExtension file ++ "_dex.csv") good
-        writeFile (dropExtension file ++ "_raw.txt") $ unlines [a ++ "\t" ++ unCsv b | (a,b) <- concat good]
+        writeFile (dropExtension file ++ "_raw.txt") $ unlines [a ++ "\t" ++ unCsv b | (a, b) <- concat good]
         whenJust edge $ \edge ->
             writeFile (dropExtension file ++ "_edge.csv") $ showEdgeCsv edge
         putStrLn $ file ++ " resulted in " ++ show (length bad) ++ " error(s)"
@@ -62,7 +62,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ concat [f (show o) (len o) ++ distance (show o ++ "D") o ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
         ++ concat [f x (len o) ++ angles (x ++ "A") o | (o@(Other x), _) <- fosParts]
   where
-
     f name x = [(name, csv x)]
 
     (XY discX discY, (discCx, discCy), discA) = case fossilAnchor fossil of
@@ -86,8 +85,14 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angles lbl typ = case fossilPath fossil typ of
         Nothing -> []
-        Just path -> concat [f (lbl ++ show i) a | (i, a) <- zipFrom 0 $ anglesBetween $
-            thd3 (shapeNearestTo (pathStart path) parent) : pathAngles path]
+        Just path ->
+            concat
+                [ f (lbl ++ show i) a
+                | (i, a) <-
+                    zipFrom 0 $
+                        anglesBetween $
+                            thd3 (shapeNearestTo (pathStart path) parent) : pathAngles path
+                ]
           where
             parent = fromJust $ lookup (fromJust $ partParent fossil typ) fosParts
 
