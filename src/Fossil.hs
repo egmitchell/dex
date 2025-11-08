@@ -30,7 +30,8 @@ data Part
     = FrondW
     | FrondL
     | Disc
-    | Pt
+    | Pt -- point
+    | Fil -- filament
     | Disc2
     | StemW
     | StemL
@@ -50,6 +51,7 @@ instance Show Part where
         FrondL -> "FrondL"
         Disc -> "Disc"
         Pt -> "Pt"
+        Fil -> "Fil"
         Disc2 -> "Disc2"
         StemW -> "StemW"
         StemL -> "StemL"
@@ -70,7 +72,7 @@ toPart x = case x of
             Branch (if lr `elem` "lL" then L else R) (read a) b
     _ -> Other x
   where
-    builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Disc2, StemW, StemL, Length1, Length2, Width1, Width2]]
+    builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Fil, Disc2, StemW, StemL, Length1, Length2, Width1, Width2]]
 
 -- | Information derived from the Svg identifier, associated with a 'Shape'.
 data Fossil = Fossil
@@ -137,6 +139,10 @@ fossilPath fos part = fmap f $ lookup part $ fosParts fos
 
 -- | Look up an ellipse in a fossil, return Nothing if not there and error if a path
 fossilEllipse :: Fossil -> Part -> Maybe AEllipse
+fossilEllipse fos Fil = fmap f $ lookup Fil $ fosParts fos
+  where
+    f (SPath path) = ellipseFromPoint $ pathStart path
+    f x = errorFossil (fosName fos) $ "part Fil expected to be a line, but got " ++ show x
 fossilEllipse fos part = fmap f $ lookup part $ fosParts fos
   where
     f (SEllipse x) = x

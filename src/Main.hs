@@ -51,12 +51,14 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "FrondL" (len FrondL)
         ++ angles "FrondA" FrondL
         ++ f "FrontW" (len FrondW)
-        ++ f "Length1" (len Length1)
+        ++ f "Length1" length1
         ++ f "Length2" (len Length2)
         ++ f "Width1" (len Width1)
         ++ f "Width2" (len Width2)
         ++ f "Disc2Cx" disc2Cx
         ++ f "Disc2Cy" disc2Cy
+        ++ f "EndX" (filament $ \(XY x _) -> x)
+        ++ f "EndY" (filament $ \(XY _ y) -> y)
         ++ concat [f (show o) (len o) ++ distance (show o ++ "D") o ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
         ++ concat [f x (len o) ++ angles (x ++ "A") o | (o@(Other x), _) <- fosParts]
   where
@@ -65,11 +67,19 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
 
     (XY discX discY, (discCx, discCy), discA) = case fossilAnchor fossil of
         (Pt, e) -> (ellipseCentre e, (0, 0), zeroAngle)
+        (Fil, e) -> (ellipseCentre e, (0, 0), zeroAngle)
         (Disc, e) -> (ellipseCentre e, ellipseSize e, ellipseAngle e)
         _ -> error "fossilAnchor of wrong type"
 
     -- take the total length of the part
     len = maybe 0 pathLength . fossilPath fossil
+
+    filament xy = fmap (xy . pathEnd) $ fossilPath fossil Fil
+
+    length1
+        | Just x <- fossilPath fossil Length1 = pathLength x
+        | Just x <- fossilPath fossil Fil = pathLength x
+        | otherwise = 0
 
     (disc2Cx, disc2Cy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 

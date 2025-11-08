@@ -11,10 +11,12 @@ module Svg (
     XY (..),
     zeroAngle,
     readFileShapes,
+    ellipseFromPoint,
     pathLength,
     pathAngles,
     pathPoints,
     pathStart,
+    pathEnd,
     anglesBetween,
     ellipseCentre,
     ellipseSize,
@@ -98,6 +100,9 @@ root ts x = case x of
     _ -> error $ "Unknown element: " ++ take 100 (show x)
   where
     f at shp = [(Ident $ fromMaybe "" $ _attrId at, transformations shp $ fromMaybe [] (_transform at) ++ ts)]
+
+ellipseFromPoint :: XY -> AEllipse
+ellipseFromPoint center = AEllipse center (X 0) (Y 0) center
 
 distanceXY :: XY -> XY -> Double
 distanceXY (XY_ x1 y1) (XY_ x2 y2) = sqrt $ sqr (x2 - x1) + sqr (y2 - y1)
