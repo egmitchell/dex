@@ -1,8 +1,9 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 {- | A fossil is a set of shapes, all of which have an identifier, e.g. @photo1_sp75_part@.
   Each part for a given prefix is unique.
   Every fossil must have exactly one of a disc or a pt (point) from which label information is taken.
 -}
-{-# LANGUAGE NamedFieldPuns #-}
 module Fossil (
     Part (..),
     LR (..),
@@ -15,13 +16,13 @@ module Fossil (
     showEdgeCsv,
 ) where
 
+import Csv
 import Data.Char
+import Data.Either
 import Data.List.Extra
 import Data.Maybe
-import Data.Either
 import Labels
 import Svg
-import Csv
 
 data LR = L | R deriving (Show, Eq, Ord)
 
@@ -85,8 +86,10 @@ data Fossil = Fossil
 data Edge = Edge [XY]
 
 showEdgeCsv :: Edge -> String
-showEdgeCsv (Edge xs) = unlines $ "X,Y" :
-    [unCsv (csv x) ++ "," ++ unCsv (csv y) | XY x y <- xs]
+showEdgeCsv (Edge xs) =
+    unlines $
+        "X,Y"
+            : [unCsv (csv x) ++ "," ++ unCsv (csv y) | XY x y <- xs]
 
 -- | Given the identifier and its label, create the info.
 info :: Ident -> Either String (String, Part)
@@ -150,35 +153,34 @@ partParent fos@Fossil{fosParts} part = case part of
     Branch _ _ "" -> get FrondL
     Branch lr n _ -> get $ Branch lr n ""
     _ -> Just root
-    where
-        get p = if isJust $ lookup p fosParts then Just p else partParent fos p
-        root = fst $ fossilAnchor fos
+  where
+    get p = if isJust $ lookup p fosParts then Just p else partParent fos p
+    root = fst $ fossilAnchor fos
 
-
--- | Make sure that all branches and elements start at the 
+-- | Make sure that all branches and elements start at the
 fossilAlign :: Fossil -> Fossil
 fossilAlign fos@Fossil{fosParts} = fos{fosParts = align [] $ partialOrder parents}
-    where
-        parents = [(a, partParent fos a) | (a, _) <- fosParts]
+  where
+    parents = [(a, partParent fos a) | (a, _) <- fosParts]
 
-        align done [] = reverse done
-        align done (x:xs) = align ((x, next) : done) xs
-            where
-                next = case me of
-                    SPath a | Just up <- up -> SPath $ pathAlign up a
-                    _ -> me
+    align done [] = reverse done
+    align done (x : xs) = align ((x, next) : done) xs
+      where
+        next = case me of
+            SPath a | Just up <- up -> SPath $ pathAlign up a
+            _ -> me
 
-                me = fromJust $ lookup x fosParts
-                up = do
-                    p <- fromJust $ lookup x parents
-                    Just $ fromJust $ lookup p fosParts
+        me = fromJust $ lookup x fosParts
+        up = do
+            p <- fromJust $ lookup x parents
+            Just $ fromJust $ lookup p fosParts
 
-
-partialOrder :: Eq a => [(a, Maybe a)] -> [a]
+partialOrder :: (Eq a) => [(a, Maybe a)] -> [a]
 partialOrder xs = f [] xs
-    where
-        f seen [] = seen
-        f seen xs | null now = error "PartialOrder failed"
-                  | otherwise = f (seen ++ map fst now) later
-            where
-                (now, later) = partition (maybe True (`elem` seen) . snd) xs
+  where
+    f seen [] = seen
+    f seen xs
+        | null now = error "PartialOrder failed"
+        | otherwise = f (seen ++ map fst now) later
+      where
+        (now, later) = partition (maybe True (`elem` seen) . snd) xs
