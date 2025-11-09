@@ -122,6 +122,7 @@ lookupAnchor :: String -> [(Part, a)] -> (Part, a)
 lookupAnchor fosName parts = case (lookup Pt parts, lookup Disc parts) of
     (Just x, Nothing) -> (Pt, x)
     (Nothing, Just x) -> (Disc, x)
+    (Nothing, Nothing) | [(Fil, x)] <- parts -> (Fil, x)
     (a, b) -> errorFossil fosName $ "must have pt or disc, but has " ++ show (length $ catMaybes [a, b]) ++ " of them"
 
 -- | Find the anchor for this fossil, must be either a Pt or Disc.
