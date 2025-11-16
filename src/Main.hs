@@ -44,7 +44,7 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "DiscY" discY
         ++ f "DiscCx" discCx
         ++ f "DiscCy" discCy
-        ++ f "DistA" discA
+        ++ f "DiscA" discA
         ++ f "StemL" (len StemL)
         ++ angles "StemA" StemL
         ++ f "StemW" (len StemW)
