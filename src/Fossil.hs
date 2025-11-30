@@ -119,11 +119,11 @@ groupFossils getLabel shapes = (fmap (mkEdge . snd) $ listToMaybe edge, fossils)
     duplicates xs = [x | (x : _ : _) <- group $ sort xs]
 
 lookupAnchor :: String -> [(Part, a)] -> (Part, a)
-lookupAnchor fosName parts = case (lookup Pt parts, lookup Disc parts) of
-    (Just x, Nothing) -> (Pt, x)
-    (Nothing, Just x) -> (Disc, x)
-    (Nothing, Nothing) | [(Fil, x)] <- parts -> (Fil, x)
-    (a, b) -> errorFossil fosName $ "must have pt or disc, but has " ++ show (length $ catMaybes [a, b]) ++ " of them"
+lookupAnchor fosName parts = case (lookup Pt parts, lookup Disc parts, lookup Fil parts) of
+    (Just x, Nothing, Nothing) -> (Pt, x)
+    (Nothing, Just x, Nothing) -> (Disc, x)
+    (Nothing, Nothing, Just x) -> (Fil, x)
+    (a, b, c) -> errorFossil fosName $ "must have pt, disc or filament, but has " ++ show (length $ catMaybes [a, b, c]) ++ " of them"
 
 -- | Find the anchor for this fossil, must be either a Pt or Disc.
 fossilAnchor :: Fossil -> (Part, AEllipse)
