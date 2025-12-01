@@ -15,7 +15,8 @@ writeCsvFile :: FilePath -> [[(String, CsvCell)]] -> IO ()
 writeCsvFile file xss = writeFile file $ unlines $ map (intercalate "," . map unCsv) $ map csv titles : map row xss
   where
     titles = nubOrd $ map fst $ concat xss
-    row xs = [fromMaybe (CsvCell "") $ lookup t xs | t <- titles]
+    -- For all missing values, we generate a 0, beacuse that makes downstream processing easier.
+    row xs = [fromMaybe (CsvCell "0") $ lookup t xs | t <- titles]
 
 class Csv a where
     csv :: a -> CsvCell
