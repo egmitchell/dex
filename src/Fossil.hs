@@ -23,6 +23,7 @@ import Data.List.Extra
 import Data.Maybe
 import Labels
 import Svg
+import Text.Read (readMaybe)
 
 data LR = L | R deriving (Show, Eq, Ord)
 
@@ -32,7 +33,7 @@ data Part
     | Disc
     | Pt -- point
     | Fil -- filament
-    | Disc2
+    | DiscN Int
     | StemW
     | StemL
     | Length1
@@ -52,7 +53,7 @@ instance Show Part where
         Disc -> "Disc"
         Pt -> "Pt"
         Fil -> "Fil"
-        Disc2 -> "Disc2"
+        DiscN i -> "Disc" ++ show i
         StemW -> "StemW"
         StemL -> "StemL"
         Length1 -> "Length1"
@@ -70,9 +71,10 @@ toPart x = case x of
         , lr `elem` "LRlr"
         , (a@(_ : _), b) <- span isDigit rest ->
             Branch (if lr `elem` "lL" then L else R) (read a) b
+    x | Just i <- lower x `stripPrefix` "disc", Just i <- readMaybe i -> DiscN i
     _ -> Other x
   where
-    builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Fil, Disc2, StemW, StemL, Length1, Length2, Width1, Width2]]
+    builtin = ("ives", Disc) : [(lower $ show x, x) | x <- [FrondW, FrondL, Disc, Pt, Fil, StemW, StemL, Length1, Length2, Width1, Width2]]
 
 -- | Information derived from the Svg identifier, associated with a 'Shape'.
 data Fossil = Fossil

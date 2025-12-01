@@ -55,8 +55,11 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         ++ f "Length2" (len Length2)
         ++ f "Width1" (len Width1)
         ++ f "Width2" (len Width2)
-        ++ f "Disc2Cx" disc2Cx
-        ++ f "Disc2Cy" disc2Cy
+        ++ concat
+            [ f ("Disc" ++ show i ++ "Cx") discNCx ++ f ("Disc" ++ show i ++ "Cy") discNCy
+            | (k@(DiscN i), _) <- fosParts
+            , let (discNCx, discNCy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil k
+            ]
         ++ f "EndX" (filament $ \(XY x _) -> x)
         ++ f "EndY" (filament $ \(XY _ y) -> y)
         ++ concat [f (show o) (len o) ++ distance (show o ++ "D") o ++ angles (show o ++ "A") o | (o@Branch{}, _) <- fosParts]
@@ -79,8 +82,6 @@ unroll fossil@Fossil{fosLabel = Label{..}, ..} =
         | Just x <- fossilPath fossil Length1 = pathLength x
         | Just x <- fossilPath fossil Fil = pathLength x
         | otherwise = 0
-
-    (disc2Cx, disc2Cy) = maybe (0, 0) ellipseSize $ fossilEllipse fossil Disc2
 
     -- take the angle of the path relative to north, using the end which is closest to the centre as the start
     angles lbl typ = case fossilPath fossil typ of
