@@ -41,7 +41,7 @@ jobs:
       shell: bash
       run: |
         mkdir -p dist
-        BIN_PATH=$(cabal list-bin exe:dex)
+        BIN_PATH=$(cabal list-bin exe:dex --enable-executable-stripping -O2)
         if [ "${{ runner.os }}" = "Windows" ]; then
           cp "$BIN_PATH" dist/dex-windows.exe
         elif [ "${{ runner.os }}" = "macOS" ]; then
