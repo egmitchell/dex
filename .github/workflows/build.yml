@@ -1,0 +1,57 @@
+name: Build Binaries
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Haskell
+      uses: haskell-actions/setup@v2
+      with:
+        ghc-version: '9.8'
+        cabal-version: '3.10'
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cabal/packages
+          ~/.cabal/store
+          dist-newstyle
+        key: ${{ runner.os }}-cabal-${{ hashFiles('**/*.cabal') }}
+        restore-keys: |
+          ${{ runner.os }}-cabal-
+
+    - name: Build
+      run: cabal build --enable-executable-stripping -O2
+
+    - name: Prepare artifact
+      shell: bash
+      run: |
+        mkdir -p dist
+        BIN_PATH=$(cabal list-bin exe:dex)
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          cp "$BIN_PATH" dist/dex-windows.exe
+        elif [ "${{ runner.os }}" = "macOS" ]; then
+          cp "$BIN_PATH" dist/dex-macos
+        else
+          cp "$BIN_PATH" dist/dex-linux
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dex-${{ runner.os }}
+        path: dist/*
