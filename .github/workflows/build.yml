@@ -42,13 +42,7 @@ jobs:
       run: |
         mkdir -p dist
         BIN_PATH=$(cabal list-bin exe:dex --enable-executable-stripping -O2)
-        if [ "${{ runner.os }}" = "Windows" ]; then
-          cp "$BIN_PATH" dist/dex-windows.exe
-        elif [ "${{ runner.os }}" = "macOS" ]; then
-          cp "$BIN_PATH" dist/dex-macos
-        else
-          cp "$BIN_PATH" dist/dex-linux
-        fi
+        cp "$BIN_PATH" dist
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
